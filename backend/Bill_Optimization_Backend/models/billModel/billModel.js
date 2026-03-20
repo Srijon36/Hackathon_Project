@@ -2,128 +2,168 @@ const mongoose = require("mongoose");
 
 const billSchema = new mongoose.Schema(
   {
+    // ✅ userId — always set from token
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     consumerNumber: {
       type: String,
-      required: [true, "Consumer number is required"],
-      trim: true
+      required: false,
+      trim: true,
+      default: "N/A",
     },
 
     customerId: {
       type: String,
-      trim: true
+      trim: true,
+      default: "",
     },
 
     customerName: {
       type: String,
-      required: [true, "Customer name is required"],
-      trim: true
+      required: false,
+      trim: true,
+      default: "N/A",
     },
 
     address: {
       type: String,
-      trim: true
+      trim: true,
+      default: "",
     },
 
     consumerType: {
       type: String,
       enum: ["Domestic", "Commercial", "Industrial"],
-      default: "Domestic"
+      default: "Domestic",
     },
 
     billMonth: {
       type: String,
-      required: [true, "Bill month is required"]
+      required: false,
+      default: "N/A",
     },
 
     billDate: {
       type: Date,
-      required: [true, "Bill date is required"]
+      required: false,
+      default: null,
     },
 
     dueDate: {
       type: Date,
-      required: [true, "Due date is required"]
+      required: false,
+      default: null,
     },
 
     unitsBilled: {
       type: Number,
-      required: [true, "Units billed is required"],
-      min: 0
+      required: false,
+      min: 0,
+      default: 0,
     },
 
     energyCharges: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     fixedDemandCharges: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     govtDuty: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     meterRent: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     adjustments: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     grossAmount: {
       type: Number,
-      required: [true, "Gross amount is required"],
-      min: 0
+      required: false,
+      min: 0,
+      default: 0,
     },
 
     rebate: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
     },
 
     netAmount: {
       type: Number,
-      required: [true, "Net amount is required"],
-      min: 0
+      required: false,
+      min: 0,
+      default: 0,
     },
 
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Overdue"],
-      default: "Pending"
-    }
+      default: "Pending",
+    },
+
+    paymentMode: {
+      type: String,
+      enum: ["UPI", "Wallet", "NetBanking", "Cash", "Card", ""],
+      default: "",
+    },
+
+    lastPaymentDate: {
+      type: Date,
+      default: null,
+    },
+
+    loadKVA: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    securityDeposit: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // ✅ stores raw OCR text for debugging
+    rawText: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
-//// Virtual field
+// ✅ Virtual field — cost per unit
 billSchema.virtual("costPerUnit").get(function () {
   if (!this.unitsBilled || this.unitsBilled === 0) return 0;
   return this.energyCharges / this.unitsBilled;
 });
 
-//// ✅ FIXED PRE SAVE (NO next)
+// ✅ Auto update payment status before save
 billSchema.pre("save", function () {
   if (
     this.netAmount > 0 &&
