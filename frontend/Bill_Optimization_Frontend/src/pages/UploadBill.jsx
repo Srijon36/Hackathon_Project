@@ -1,96 +1,86 @@
-import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { scanAndCreateBill, clearScanSuccess, clearError } from "../Reducer/BillSlice";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { scanAndCreateBill } from "../Reducer/BillSlice";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next"; // ✅
+import Loader from "./Loader";
 
 const UploadBill = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, scanSuccess } = useSelector((state) => state.bill);
-  const [file, setFile] = useState(null);
-  const [dragOver, setDragOver] = useState(false);
+  const { t } = useTranslation(); // ✅
+  const { loading, error } = useSelector((state) => state.bill);
+  const [file, setFile]       = useState(null);
+  const [dragging, setDragging] = useState(false);
 
-  // ✅ navigate to dashboard when scan succeeds
-  useEffect(() => {
-    if (scanSuccess) {
-      dispatch(clearScanSuccess());
-      navigate("/dashboard");
-    }
-  }, [scanSuccess]);
-
-  // ✅ clear error on mount
-  useEffect(() => {
-    dispatch(clearError());
-  }, []);
-
-  const handleFile = (f) => {
-    if (!f) return;
-    if (f.size > 10 * 1024 * 1024) return alert("File must be under 10MB");
-    setFile(f);
-  };
-
-  const handleDrop = (e) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
-    setDragOver(false);
-    handleFile(e.dataTransfer.files[0]);
+    if (!file || loading) return;
+    const result = await dispatch(scanAndCreateBill(file));
+    if (scanAndCreateBill.fulfilled.match(result)) navigate("/dashboard");
   };
 
-  const handleSubmit = () => {
-    if (!file) return alert("Please select a bill image first");
-    dispatch(scanAndCreateBill(file));
-  };
+  if (loading) return (
+    <div className="loader-container">
+      <div className="spinner" />
+      <p style={{ marginTop: "12px", color: "#64748b" }}>
+        🔍 {t("uploading")}
+      </p>
+    </div>
+  );
 
   return (
     <div className="upload-page">
       <div className="upload-card">
-        <h2>📤 Upload Your Bill</h2>
-        <p>We'll scan and analyse it instantly.</p>
+        <h2>📤 {t("uploadTitle")}</h2>
+        <p>{t("uploadSub")}</p>
 
-        {error && <p className="text-red">❌ {error}</p>}
+        {error && (
+          <p style={{ color: "red", marginBottom: "12px" }}>❌ {error}</p>
+        )}
 
-        <div
-          className={`dropzone ${dragOver ? "drag-active" : ""}`}
-          onClick={() => document.getElementById("bill-input").click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-        >
-          {file ? (
-            <>
-              <div className="drop-icon">✅</div>
-              <div className="drop-title">{file.name}</div>
-              <div className="drop-sub">Supports PDF, JPG, PNG up to 10MB</div>
-            </>
-          ) : (
-            <>
-              <div className="drop-icon">📂</div>
-              <div className="drop-title">Click or drag your bill here</div>
-              <div className="drop-sub">Supports PDF, JPG, PNG up to 10MB</div>
-            </>
-          )}
-          <input
-            id="bill-input"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            style={{ display: "none" }}
-            onChange={(e) => handleFile(e.target.files[0])}
-          />
-        </div>
+        <form onSubmit={handleUpload}>
+          <div
+            className="dropzone"
+            style={dragging ? { borderColor: "#1e88e5", background: "#e0f2fe" } : {}}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              setFile(e.dataTransfer.files[0]);
+            }}
+            onClick={() => document.getElementById("fileInput").click()}
+          >
+            <div className="drop-icon">{file ? "✅" : "📄"}</div>
+            <div className="drop-title">
+              {file ? file.name : t("dropTitle")}
+            </div>
+            <div className="drop-sub">{t("dropSub")}</div>
+            <input
+              id="fileInput" type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              style={{ display: "none" }}
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+          </div>
 
-        <div className="upload-formats">
-          {["✅ MSEDCL", "✅ BESCOM", "✅ TPDDL", "✅ KSEB", "✅ CESC", "+ more"].map((tag) => (
-            <span key={tag} className="format-tag">{tag}</span>
-          ))}
-        </div>
+          <div className="upload-formats">
+            <span className="format-tag">✅ MSEDCL</span>
+            <span className="format-tag">✅ BESCOM</span>
+            <span className="format-tag">✅ TPDDL</span>
+            <span className="format-tag">✅ KSEB</span>
+            <span className="format-tag">+ more</span>
+          </div>
 
-        <button
-          className="btn-upload-submit"
-          onClick={handleSubmit}
-          disabled={loading || !file}
-        >
-          {loading ? "⏳ Scanning your bill..." : "⚡ Scan & Analyse My Bill"}
-        </button>
+          <button
+            type="submit"
+            className="btn-upload-submit"
+            disabled={!file || loading}
+          >
+            {t("analyseBtn")}
+          </button>
+        </form>
       </div>
     </div>
   );

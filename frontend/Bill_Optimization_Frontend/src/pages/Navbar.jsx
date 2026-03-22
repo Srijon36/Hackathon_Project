@@ -2,11 +2,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../Reducer/AuthSlice";
 import { useTheme } from "../context/ThemeContext";
+import { useLanguage } from "../context/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleDarkMode }   = useTheme();
+  const { language, changeLanguage }   = useLanguage();
+  const { t } = useTranslation();
 
   const stored = sessionStorage.getItem("energy_token");
   const token  = stored ? JSON.parse(stored)?.token : null;
@@ -23,23 +27,49 @@ const Navbar = () => {
       </Link>
 
       <div className="nav-links">
-        <Link to="/">Home</Link>
-        <Link to="/upload">Upload Bill</Link>
-        <Link to="/dashboard">Dashboard</Link>
+        <Link to="/">{t("home")}</Link>
+        <Link to="/upload">{t("uploadBill")}</Link>
+        <Link to="/dashboard">{t("dashboard")}</Link>
+
+        {/* ✅ Language Switcher */}
+        <div className="lang-switcher">
+          <button
+            className={`lang-btn ${language === "en" ? "active" : ""}`}
+            onClick={() => changeLanguage("en")}
+          >
+            EN
+          </button>
+          <button
+            className={`lang-btn ${language === "hi" ? "active" : ""}`}
+            onClick={() => changeLanguage("hi")}
+          >
+            हि
+          </button>
+          <button
+            className={`lang-btn ${language === "bn" ? "active" : ""}`}
+            onClick={() => changeLanguage("bn")}
+          >
+            বাং
+          </button>
+        </div>
 
         {/* ✅ Dark mode toggle */}
         <button
           className="dark-toggle"
           onClick={toggleDarkMode}
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          title={darkMode ? "Light Mode" : "Dark Mode"}
         >
           {darkMode ? "☀️" : "🌙"}
         </button>
 
         {token ? (
-          <button className="nav-btn" onClick={handleLogout}>Logout</button>
+          <button className="nav-btn" onClick={handleLogout}>
+            {t("logout")}
+          </button>
         ) : (
-          <button className="nav-btn" onClick={() => navigate("/login")}>Login</button>
+          <button className="nav-btn" onClick={() => navigate("/login")}>
+            {t("login")}
+          </button>
         )}
       </div>
     </nav>
