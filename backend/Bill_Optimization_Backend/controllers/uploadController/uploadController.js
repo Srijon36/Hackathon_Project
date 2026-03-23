@@ -2,6 +2,13 @@ const { extractTextFromImage, extractTextFromPDF } = require("../../services/ocr
 const { parseBill } = require("../../services/aiParserService");
 const Bill = require("../../models/billModel/billModel");
 
+// ✅ Safe date helper — prevents "Invalid Date" mongoose cast errors
+const isValidDate = (val) => {
+  if (!val) return false;
+  const d = new Date(val);
+  return !isNaN(d.getTime());
+};
+
 exports.scanAndCreateBill = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -30,18 +37,18 @@ exports.scanAndCreateBill = async (req, res, next) => {
       });
     }
 
-    // Step 2: Parse with NVIDIA AI
+    // Step 2: Parse with AI
     const billFields = await parseBill(extractedText);
 
     console.log("🤖 AI parsed fields:", billFields);
 
-    // ✅ Step 3: Safe defaults — prevent validation errors
+    // Step 3: Safe defaults — prevent validation errors
     const safeBillData = {
       consumerNumber:     billFields.consumerNumber     || "N/A",
       customerName:       billFields.customerName       || "N/A",
       billMonth:          billFields.billMonth          || "N/A",
-      billDate:           billFields.billDate           ? new Date(billFields.billDate)   : new Date(),
-      dueDate:            billFields.dueDate            ? new Date(billFields.dueDate)    : new Date(),
+      billDate:           isValidDate(billFields.billDate) ? new Date(billFields.billDate) : new Date(),
+      dueDate:            isValidDate(billFields.dueDate)  ? new Date(billFields.dueDate)  : new Date(),
       address:            billFields.address            || "",
       consumerType:       ["Domestic", "Commercial", "Industrial"].includes(billFields.consumerType)
                             ? billFields.consumerType
@@ -57,7 +64,7 @@ exports.scanAndCreateBill = async (req, res, next) => {
       netAmount:          Number(billFields.netAmount)          || 0,
       loadKVA:            Number(billFields.loadKVA)            || 0,
       securityDeposit:    Number(billFields.securityDeposit)    || 0,
-      rawText:            extractedText, // ✅ save OCR text for debugging
+      rawText:            extractedText,
       userId:             req.user.id,
     };
 
@@ -79,6 +86,7 @@ exports.scanAndCreateBill = async (req, res, next) => {
         message: "AI could not parse the bill. Please upload a clearer image.",
       });
     }
+
     next(error);
   }
 };
