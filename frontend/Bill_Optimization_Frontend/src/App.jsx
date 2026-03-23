@@ -9,6 +9,7 @@ import Dashboard      from "./pages/DashBoard";
 import DownloadReport from "./pages/DownloadReport";
 import BillDetail     from "./pages/BillDetail";
 import AnalysisPage   from "./pages/AnalysisPage";
+import ForgotPassword from "./pages/ForgotPassword";
 
 const ProtectedRoute = ({ children }) => {
   const stored = sessionStorage.getItem("energy_token");
@@ -25,6 +26,7 @@ function App() {
         <Route path="/"         element={<Home />} />
         <Route path="/login"    element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* ── Protected Routes ── */}
         <Route path="/upload" element={

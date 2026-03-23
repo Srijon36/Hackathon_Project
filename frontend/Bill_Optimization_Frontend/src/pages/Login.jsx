@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../Reducer/AuthSlice"; // adjust path if needed
+import { login } from "../Reducer/AuthSlice";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,7 +35,8 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Email */}
+
+          {/* ── Email ── */}
           <div className="form-group">
             <label>Email Address</label>
             <input
@@ -48,7 +49,7 @@ const Login = () => {
             )}
           </div>
 
-          {/* Password */}
+          {/* ── Password ── */}
           <div className="form-group">
             <label>Password</label>
             <div className="input-wrapper">
@@ -69,21 +70,34 @@ const Login = () => {
             )}
           </div>
 
-          {/* Server error from Redux */}
-          {error && <div className="text-red error-msg">{error}</div>}
+          {/* ── Server error ── */}
+          {error && (
+            <div className="text-red error-msg">{error}</div>
+          )}
 
-          {/* Remember Me + Forgot */}
+          {/* ── Remember Me + Forgot Password ── */}
           <div className="auth-options">
             <label className="remember-label">
               <input type="checkbox" /> Remember me
             </label>
-            <span className="forgot-password">Forgot Password?</span>
+            {/* ✅ fixed — no raw comment inside JSX */}
+            <span
+              className="forgot-password"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Forgot password?
+            </span>
           </div>
 
-          {/* Submit */}
-          <button type="submit" className="btn-primary" disabled={loading}>
+          {/* ── Submit ── */}
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={loading}
+          >
             {loading ? "Signing in..." : "Login"}
           </button>
+
         </form>
 
         <p className="auth-footer">
