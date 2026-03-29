@@ -27,20 +27,20 @@ mongoose
   .catch((err) => console.log("❌ MongoDB Connection Failed:", err));
 
 // 🔹 Import Routes
-const billRoutes          = require("./routes/billRoute/billRoute");
-const registerRoutes      = require("./routes/registerRoute/registerRoute");
-const loginRoutes         = require("./routes/loginRoute/loginRoute");
-const analysisRoutes      = require("./routes/analysisRoute/analysisRoute");
-const uploadsRoutes       = require("./routes/uploadRoute/uploadRoute");
-const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes/forgotPasswordRoutes");
+const billRoutes             = require("./routes/billRoute/billRoute");
+const registerRoutes         = require("./routes/registerRoute/registerRoute");
+const loginRoutes            = require("./routes/loginRoute/loginRoute");
+const analysisRoutes         = require("./routes/analysisRoute/analysisRoute");
+const uploadsRoutes          = require("./routes/uploadRoute/uploadRoute");
+const forgotPasswordRoutes   = require("./routes/forgotPasswordRoutes/forgotPasswordRoutes");
 
 // 🔹 Use Routes
-app.use("/api/bills",           billRoutes);
-app.use("/api/logins",          loginRoutes);
-app.use("/api/registers",       registerRoutes);
-app.use("/api/analysis",        analysisRoutes);
-app.use("/api/uploads",         uploadsRoutes);
-app.use("/api/forgot-password", forgotPasswordRoutes);
+app.use("/api/bills",              billRoutes);
+app.use("/api/logins",             loginRoutes);
+app.use("/api/registers",          registerRoutes);
+app.use("/api/analysis",           analysisRoutes);
+app.use("/api/uploads",            uploadsRoutes);
+app.use("/api/forgot-password",    forgotPasswordRoutes);
 
 // 🔹 Health Check Route
 app.get("/", (req, res) => {

@@ -1,222 +1,154 @@
-const User   = require("../../models/userModel/userModel");
-const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
+const bcrypt        = require("bcryptjs");
+const User          = require("../../models/userModel/userModel");
+const { sendOtpEmail } = require("../../utils/mailer");
 
-// ✅ create transporter
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
+// ─────────────────────────────────────────────────────────────
+// Helper: generate a random 6-digit OTP
+// ─────────────────────────────────────────────────────────────
+const generateOtp = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
-// ✅ generate 6 digit OTP
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-// ── STEP 1: Send OTP ──────────────────────────────────────
-exports.sendOTP = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// STEP 1 — POST /api/forgot-password/send-otp
+// Body: { email }
+// ─────────────────────────────────────────────────────────────
+const sendOtp = async (req, res) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required",
-      });
+      return res.status(400).json({ success: false, message: "Email is required." });
     }
 
-    // check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "No account found with this email",
+      // Generic message to prevent user enumeration
+      return res.status(200).json({
+        success: true,
+        message: "If that email exists, an OTP has been sent.",
       });
     }
 
-    // generate OTP + set expiry (10 minutes)
-    const otp       = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    const otp       = generateOtp();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // save OTP to user
     user.otp       = otp;
     user.otpExpiry = otpExpiry;
     await user.save();
 
-    // send OTP email
-    const transporter = createTransporter();
-    await transporter.sendMail({
-      from:    `"Energy Bill App" <${process.env.EMAIL_USER}>`,
-      to:      email,
-      subject: "🔐 Your Password Reset OTP",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-          <div style="background: #1e88e5; padding: 24px; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #fff; margin: 0;">⚡ Energy Bill App</h1>
-          </div>
-          <div style="background: #f8fafc; padding: 24px; border-radius: 0 0 12px 12px;">
-            <p>Hi <strong>${user.name}</strong>,</p>
-            <p>Your password reset OTP is:</p>
+    await sendOtpEmail(user.email, otp);
 
-            <div style="
-              background: #fff;
-              border: 2px dashed #1e88e5;
-              border-radius: 12px;
-              padding: 24px;
-              text-align: center;
-              margin: 20px 0;
-            ">
-              <h1 style="
-                font-size: 48px;
-                font-weight: 800;
-                color: #1e88e5;
-                letter-spacing: 12px;
-                margin: 0;
-              ">${otp}</h1>
-              <p style="color: #94a3b8; margin-top: 8px; font-size: 13px;">
-                Valid for 10 minutes only
-              </p>
-            </div>
-
-            <p style="color: #64748b; font-size: 13px;">
-              If you didn't request this, ignore this email.
-              Your password will not be changed.
-            </p>
-          </div>
-        </div>
-      `,
-    });
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: `OTP sent to ${email}`,
+      message: "OTP sent to your email address. It is valid for 10 minutes.",
     });
-
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+  } catch (error) {
+    console.error("❌ sendOtp error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
 
-// ── STEP 2: Verify OTP ────────────────────────────────────
-exports.verifyOTP = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// STEP 2 — POST /api/forgot-password/verify-otp
+// Body: { email, otp }
+// Returns a short-lived reset token (the hashed OTP itself) that
+// the frontend must pass to the reset-password endpoint.
+// ─────────────────────────────────────────────────────────────
+const verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and OTP are required",
-      });
+      return res.status(400).json({ success: false, message: "Email and OTP are required." });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // check OTP matches
-    if (user.otp !== otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    // check OTP not expired
-    if (new Date() > user.otpExpiry) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP has expired. Please request a new one.",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "OTP verified successfully",
-    });
-
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-};
-
-// ── STEP 3: Reset Password ────────────────────────────────
-exports.resetPassword = async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Email, OTP and new password are required",
-      });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // verify OTP again
-    if (user.otp !== otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.otp || !user.otpExpiry) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP." });
     }
 
     if (new Date() > user.otpExpiry) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired. Please request a new one.",
-      });
+      // Clear expired OTP
+      user.otp       = null;
+      user.otpExpiry = null;
+      await user.save();
+      return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
     }
 
-    // ✅ hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    if (user.otp !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP." });
+    }
 
-    // ✅ update password + clear OTP
-    user.password  = hashedPassword;
+    // OTP is valid — generate a one-time reset token (valid 15 min)
+    const jwt = require("jsonwebtoken");
+    const resetToken = jwt.sign(
+      { userId: user._id, purpose: "password-reset" },
+      process.env.SECRET_KEY,
+      { expiresIn: "15m" }
+    );
+
+    // Clear the OTP so it cannot be reused
     user.otp       = null;
     user.otpExpiry = null;
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Password reset successfully! Please login.",
+      message: "OTP verified. Use the reset token to set your new password.",
+      resetToken,
+      // Frontend redirect hint:  /reset-password?token=<resetToken>
     });
+  } catch (error) {
+    console.error("❌ verifyOtp error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
 
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message,
-    });
-  }
-  exports.sendOTP = async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// STEP 3 — POST /api/forgot-password/reset-password
+// Body: { resetToken, newPassword }
+// ─────────────────────────────────────────────────────────────
+const resetPassword = async (req, res) => {
   try {
-    console.log("📧 send-otp called with:", req.body); // ✅ add this
-    const { email } = req.body;
-    // ... rest of code
-  } catch (err) {
-    console.error("❌ sendOTP error:", err.message); // ✅ add this
-    res.status(500).json({ success: false, message: err.message });
+    const { resetToken, newPassword } = req.body;
+
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ success: false, message: "Reset token and new password are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters." });
+    }
+
+    const jwt = require("jsonwebtoken");
+    let decoded;
+    try {
+      decoded = jwt.verify(resetToken, process.env.SECRET_KEY);
+    } catch {
+      return res.status(400).json({ success: false, message: "Invalid or expired reset token." });
+    }
+
+    if (decoded.purpose !== "password-reset") {
+      return res.status(400).json({ success: false, message: "Invalid token purpose." });
+    }
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully. You can now log in with your new password.",
+    });
+  } catch (error) {
+    console.error("❌ resetPassword error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
-};
+
+module.exports = { sendOtp, verifyOtp, resetPassword };
