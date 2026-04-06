@@ -8,15 +8,15 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
 
-  // ✅ 3 steps
   const [step,        setStep]        = useState(1);
   const [email,       setEmail]       = useState("");
   const [otp,         setOtp]         = useState("");
+  const [resetToken,  setResetToken]  = useState(""); // ✅ store resetToken
   const [newPassword, setNewPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
   const [successMsg,  setSuccessMsg]  = useState("");
 
-  // ── Step 1: Send OTP ──
+  // Step 1
   const handleSendOTP = async (e) => {
     e.preventDefault();
     const result = await dispatch(sendOTP(email));
@@ -26,23 +26,22 @@ const ForgotPassword = () => {
     }
   };
 
-  // ── Step 2: Verify OTP ──
+  // Step 2 — save resetToken from response
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     const result = await dispatch(verifyOTP({ email, otp }));
     if (verifyOTP.fulfilled.match(result)) {
+      setResetToken(result.payload.resetToken); // ✅ save it
       setStep(3);
       setSuccessMsg("OTP verified! Set your new password.");
     }
   };
 
-  // ── Step 3: Reset Password ──
+  // Step 3 — send resetToken instead of email+otp
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (newPassword !== confirmPass) {
-      return alert("Passwords do not match");
-    }
-    const result = await dispatch(resetPassword({ email, otp, newPassword }));
+    if (newPassword !== confirmPass) return alert("Passwords do not match");
+    const result = await dispatch(resetPassword({ resetToken, newPassword })); // ✅ fixed
     if (resetPassword.fulfilled.match(result)) {
       setSuccessMsg("Password reset successfully!");
       setTimeout(() => navigate("/login"), 2000);
@@ -52,8 +51,6 @@ const ForgotPassword = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-
-        {/* ── Header ── */}
         <div className="auth-top">
           <div className="auth-icon">🔐</div>
           <h2>Forgot Password</h2>
@@ -64,42 +61,15 @@ const ForgotPassword = () => {
           </p>
         </div>
 
-        {/* ── Step Indicator ── */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+        <div className="step-bar-wrap">
           {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              style={{
-                flex: 1,
-                height: "4px",
-                borderRadius: "2px",
-                background: step >= s ? "#1e88e5" : "#e2e8f0",
-                transition: "background 0.3s",
-              }}
-            />
+            <div key={s} className={`step-bar ${step >= s ? "active" : ""}`} />
           ))}
         </div>
 
-        {/* ── Success Message ── */}
-        {successMsg && (
-          <div style={{
-            background: "#dcfce7", color: "#16a34a",
-            padding: "10px 14px", borderRadius: "8px",
-            fontSize: "13px", marginBottom: "16px",
-            fontWeight: "600",
-          }}>
-            ✅ {successMsg}
-          </div>
-        )}
+        {successMsg && <div className="success-msg">✅ {successMsg}</div>}
+        {error && <div className="error-msg">❌ {error}</div>}
 
-        {/* ── Error Message ── */}
-        {error && (
-          <div className="text-red error-msg" style={{ marginBottom: "12px" }}>
-            ❌ {error}
-          </div>
-        )}
-
-        {/* ── Step 1: Email ── */}
         {step === 1 && (
           <form onSubmit={handleSendOTP}>
             <div className="form-group">
@@ -112,56 +82,39 @@ const ForgotPassword = () => {
                 required
               />
             </div>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Send OTP"}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Sending OTP..." : "Send OTP →"}
             </button>
           </form>
         )}
 
-        {/* ── Step 2: OTP ── */}
         {step === 2 && (
           <form onSubmit={handleVerifyOTP}>
             <div className="form-group">
               <label>Enter 6-digit OTP</label>
               <input
                 type="text"
-                placeholder="_ _ _ _ _ _"
+                placeholder="······"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 maxLength={6}
-                style={{ fontSize: "24px", letterSpacing: "8px", textAlign: "center" }}
+                className="otp-input"
                 required
               />
-              <small style={{ color: "#94a3b8", fontSize: "12px" }}>
+              <small style={{ color: "#94a3b8", fontSize: "12px", marginTop: "6px", display: "block" }}>
                 OTP valid for 10 minutes
               </small>
             </div>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Verifying..." : "Verify OTP"}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Verifying..." : "Verify OTP →"}
             </button>
-
-            {/* Resend OTP */}
-            <p style={{ textAlign: "center", marginTop: "12px", fontSize: "13px", color: "#64748b" }}>
+            <p className="resend-row">
               Didn't receive?{" "}
-              <span
-                style={{ color: "#1e88e5", cursor: "pointer", fontWeight: "600" }}
-                onClick={() => { setStep(1); setSuccessMsg(""); }}
-              >
-                Resend OTP
-              </span>
+              <span onClick={() => { setStep(1); setSuccessMsg(""); }}>Resend OTP</span>
             </p>
           </form>
         )}
 
-        {/* ── Step 3: New Password ── */}
         {step === 3 && (
           <form onSubmit={handleResetPassword}>
             <div className="form-group">
@@ -184,17 +137,13 @@ const ForgotPassword = () => {
                 required
               />
             </div>
-            <button
-              type="submit"
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Resetting..." : "Reset Password"}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Resetting..." : "Reset Password →"}
             </button>
           </form>
         )}
 
-        <p className="auth-footer" style={{ marginTop: "20px" }}>
+        <p className="auth-footer">
           Remember your password?{" "}
           <Link to="/login" className="auth-link">Login</Link>
         </p>

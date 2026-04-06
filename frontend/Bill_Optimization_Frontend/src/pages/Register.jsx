@@ -9,125 +9,120 @@ const Register = () => {
   const { loading, error } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    name: "", email: "", password: "", confirmPassword: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return; // ✅ prevent multiple submissions
-
+    if (loading) return;
     if (formData.password !== formData.confirmPassword) {
       setPasswordError("Passwords do not match");
       return;
     }
-
     setPasswordError("");
-
-    const result = await dispatch(
-      registerUser({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        confirm_password: formData.confirmPassword, // ✅ backend expects this key
-      })
-    );
-
-    if (registerUser.fulfilled.match(result)) {
-      navigate("/login");
-    }
+    const result = await dispatch(registerUser({
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      confirm_password: formData.confirmPassword,
+    }));
+    if (registerUser.fulfilled.match(result)) navigate("/login");
   };
 
-  const errorMessage = error?.msg || error?.message ||
-    (typeof error === "string" ? error : null);
+  const errorMessage = error?.msg || error?.message || (typeof error === "string" ? error : null);
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-top">
-          <div className="auth-icon">⚡</div>
-          <h2>Create Account</h2>
-          <p>Start saving on your energy bills today</p>
+    <div className="auth-page">
+      <div className="auth-card-new">
+
+        {/* Wind turbine header image */}
+        <div className="auth-card-header register-header">
+          <div className="auth-logo-circle register-logo">⚡</div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Full Name</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter your name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        {/* Form body */}
+        <div className="auth-card-body">
+          <h2 className="auth-title">Create Account</h2>
+          <p className="auth-subtitle">Start optimizing your energy bills today</p>
 
-          <div className="form-group">
-            <label>Email Address</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="auth-field">
+              <label>Full Name</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">👤</span>
+                <input
+                  type="text" name="name" placeholder="John Doe"
+                  value={formData.name} onChange={handleChange} required
+                />
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="auth-field">
+              <label>Email Address</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">✉️</span>
+                <input
+                  type="email" name="email" placeholder="name@example.com"
+                  value={formData.email} onChange={handleChange} required
+                />
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label>Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="auth-field">
+              <label>Password</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">🔒</span>
+                <input
+                  type={showPassword ? "text" : "password"} name="password"
+                  placeholder="••••••••" value={formData.password} onChange={handleChange} required
+                />
+                <span className="auth-eye" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
+              </div>
+            </div>
 
-          {passwordError && (
-            <div className="text-red error-msg">{passwordError}</div>
-          )}
+            <div className="auth-field">
+              <label>Confirm Password</label>
+              <div className="auth-input-wrap">
+                <span className="auth-input-icon">🔄</span>
+                <input
+                  type={showConfirm ? "text" : "password"} name="confirmPassword"
+                  placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} required
+                />
+                <span className="auth-eye" onClick={() => setShowConfirm(!showConfirm)}>
+                  {showConfirm ? "🙈" : "👁️"}
+                </span>
+              </div>
+            </div>
 
-          {errorMessage && (
-            <div className="text-red error-msg">{errorMessage}</div>
-          )}
+            <div className="auth-field">
+              <label className="auth-check-label">
+                <input type="checkbox" required />
+                I agree to the{" "}
+                <span className="auth-switch-link">Terms of Service</span>{" "}
+                and <span className="auth-switch-link">Privacy Policy</span>.
+              </label>
+            </div>
 
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={loading}
-          >
-            {loading ? "Creating Account..." : "Register"}
-          </button>
-        </form>
+            {passwordError && <div className="text-red error-msg">{passwordError}</div>}
+            {errorMessage  && <div className="text-red error-msg">{errorMessage}</div>}
 
-        <p className="auth-footer">
-          Already have an account?{" "}
-          <Link to="/login" className="auth-link">Login</Link>
-        </p>
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? "Creating Account..." : "Register →"}
+            </button>
+          </form>
+
+          <p className="auth-switch">
+            Already have an account?{" "}
+            <Link to="/login" className="auth-switch-link">Log in</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

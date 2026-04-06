@@ -77,7 +77,7 @@ export const verifyOTP = createAsyncThunk(
   async ({ email, otp }, { rejectWithValue }) => {
     try {
       const res = await api.post("/forgot-password/verify-otp", { email, otp });
-      return res.data;
+      return res.data; // ✅ contains resetToken from backend
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message || "Invalid OTP"
@@ -89,10 +89,11 @@ export const verifyOTP = createAsyncThunk(
 // ── RESET PASSWORD ───────────────────────────
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
-  async ({ email, otp, newPassword }, { rejectWithValue }) => {
+  async ({ resetToken, newPassword }, { rejectWithValue }) => { // ✅ fixed params
     try {
       const res = await api.post("/forgot-password/reset-password", {
-        email, otp, newPassword,
+        resetToken,
+        newPassword,
       });
       return res.data;
     } catch (err) {
@@ -105,10 +106,11 @@ export const resetPassword = createAsyncThunk(
 
 // ── SLICE ────────────────────────────────────
 const initialState = {
-  loading: false,
-  error:   null,
-  user:    null,
-  token:   null,
+  loading:    false,
+  error:      null,
+  user:       null,
+  token:      null,
+  resetToken: null, // ✅ store resetToken after OTP verify
 };
 
 const AuthSlice = createSlice({
@@ -116,10 +118,11 @@ const AuthSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.loading = false;
-      state.error   = null;
-      state.user    = null;
-      state.token   = null;
+      state.loading    = false;
+      state.error      = null;
+      state.user       = null;
+      state.token      = null;
+      state.resetToken = null;
       sessionStorage.removeItem("energy_token");
     },
   },
@@ -132,15 +135,16 @@ const AuthSlice = createSlice({
         state.error   = null;
       })
       .addCase(login.fulfilled, (state, { payload }) => {
-        state.loading = false;
-        state.error   = null;
-        state.token   = payload.token;
-        state.user    = payload.user;
-        sessionStorage.setItem("energy_token", JSON.stringify({
-          token: payload.token,
-          user:  payload.user,
-        }));
-      })
+  state.loading = false;
+  state.error   = null;
+  state.token   = payload.token;
+  state.user    = payload.user;
+  sessionStorage.setItem("energy_token", JSON.stringify({
+    token: payload.token,
+    user:  payload.user,
+    role:  payload.user?.role,   // ← NEW
+  }));
+})
       .addCase(login.rejected, (state, { payload }) => {
         state.loading = false;
         state.error   = payload?.msg || payload?.message ||
@@ -164,10 +168,11 @@ const AuthSlice = createSlice({
 
       // ── LOGOUT ─────────────────────────────
       .addCase(logoutUser.fulfilled, (state) => {
-        state.loading = false;
-        state.error   = null;
-        state.user    = null;
-        state.token   = null;
+        state.loading    = false;
+        state.error      = null;
+        state.user       = null;
+        state.token      = null;
+        state.resetToken = null;
       })
 
       // ── SEND OTP ───────────────────────────
@@ -189,9 +194,10 @@ const AuthSlice = createSlice({
         state.loading = true;
         state.error   = null;
       })
-      .addCase(verifyOTP.fulfilled, (state) => {
-        state.loading = false;
-        state.error   = null;
+      .addCase(verifyOTP.fulfilled, (state, { payload }) => {
+        state.loading    = false;
+        state.error      = null;
+        state.resetToken = payload.resetToken; // ✅ save resetToken in state
       })
       .addCase(verifyOTP.rejected, (state, { payload }) => {
         state.loading = false;
@@ -204,8 +210,9 @@ const AuthSlice = createSlice({
         state.error   = null;
       })
       .addCase(resetPassword.fulfilled, (state) => {
-        state.loading = false;
-        state.error   = null;
+        state.loading    = false;
+        state.error      = null;
+        state.resetToken = null; // ✅ clear resetToken after use
       })
       .addCase(resetPassword.rejected, (state, { payload }) => {
         state.loading = false;

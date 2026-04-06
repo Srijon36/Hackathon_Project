@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Navbar         from "./pages/Navbar";
 import Home           from "./pages/Home";
@@ -10,6 +10,9 @@ import DownloadReport from "./pages/DownloadReport";
 import BillDetail     from "./pages/BillDetail";
 import AnalysisPage   from "./pages/AnalysisPage";
 import ForgotPassword from "./pages/ForgotPassword";
+import Appliances     from "./pages/Appliances";
+import AdminPanel     from "./pages/AdminPanel";        // ← NEW
+import AdminRoute     from "./pages/AdminRoute";  // ← NEW
 
 const ProtectedRoute = ({ children }) => {
   const stored = sessionStorage.getItem("energy_token");
@@ -17,18 +20,27 @@ const ProtectedRoute = ({ children }) => {
   return token ? children : <Navigate to="/login" replace />;
 };
 
-function App() {
+const AppLayout = () => {
+  const location = useLocation();
+
+  // ← UPDATED: added "/admin"
+  const hideNavbarRoutes = ["/", "/login", "/register", "/forgot-password", "/admin"];
+  const hideNavbar = hideNavbarRoutes.includes(location.pathname);
+
   return (
-    <BrowserRouter>
-      <Navbar />
+    <>
+      {!hideNavbar && <Navbar />}
       <Routes>
         {/* ── Public Routes ── */}
-        <Route path="/"         element={<Home />} />
-        <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/"                element={<Home />} />
+        <Route path="/login"           element={<Login />} />
+        <Route path="/register"        element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* ── Protected Routes ── */}
+        <Route path="/appliances" element={
+          <ProtectedRoute><Appliances /></ProtectedRoute>
+        } />
         <Route path="/upload" element={
           <ProtectedRoute><UploadBill /></ProtectedRoute>
         } />
@@ -45,6 +57,11 @@ function App() {
           <ProtectedRoute><DownloadReport /></ProtectedRoute>
         } />
 
+        {/* ── Admin Route ── */}        {/* ← NEW */}
+        <Route path="/admin" element={
+          <AdminRoute><AdminPanel /></AdminRoute>
+        } />
+
         {/* ── 404 ── */}
         <Route path="*" element={
           <div className="loader-container">
@@ -59,6 +76,14 @@ function App() {
           </div>
         } />
       </Routes>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
     </BrowserRouter>
   );
 }

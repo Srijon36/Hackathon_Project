@@ -2,56 +2,41 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <div>
-      <div className="home-hero">
-        <div className="hero-badge">🇮🇳 Made for Indian households</div>
-        <h1 className="hero-title">
-          Cut Your Electricity<br /><span>Bill in Half</span>
+    <div className="home-root">
+
+      {/* ── Hero ── */}
+      <section className="home-hero-new">
+        <div className="hero-badge-new">● PROVEN BILL ANALYSIS SYSTEM</div>
+
+        <h1 className="hero-title-new">
+          Optimize Your<br />
+          <span className="hero-title-green">Energy Bill</span><br />
+          <span className="hero-title-ghost">for Savings</span>
         </h1>
-        <p className="hero-sub">
-          Upload your bill, get AI-powered insights, compare tariffs,
-          and start saving money in under 30 seconds.
+
+        <p className="hero-desc">
+          Our service <strong>analyzes your bill costs</strong> across thousands of data points
+          and 50+ providers to find a good plan for{" "}
+          <strong>bill savings and lowering energy costs</strong>.
         </p>
-        <div className="hero-btns">
-          <Link to="/login" className="btn-white">⚡ Get Started Free</Link>
-          <Link to="/upload" className="btn-outline-white">Upload Bill →</Link>
-        </div>
-      </div>
 
-      <div className="home-stats-section">
-        <div className="home-stats-row">
-          <div className="h-stat">
-            <span className="h-stat-val">₹4,200</span>
-            <div className="h-stat-label">Avg. Annual Savings</div>
-          </div>
-          <div className="h-stat">
-            <span className="h-stat-val">30s</span>
-            <div className="h-stat-label">Time to Insights</div>
-          </div>
-          <div className="h-stat">
-            <span className="h-stat-val">12k+</span>
-            <div className="h-stat-label">Bills Analysed</div>
-          </div>
-        </div>
+        <Link to="/upload" className="hero-cta-btn">
+          Analyze My Bill &nbsp;→
+        </Link>
 
-        <div className="home-features">
-          <div className="feature-card">
-            <div className="feature-icon">📄</div>
-            <div className="feature-title">Upload Any Bill</div>
-            <div className="feature-desc">Supports PDF, JPG, PNG. Works with all Indian electricity providers.</div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">🤖</div>
-            <div className="feature-title">AI Analysis</div>
-            <div className="feature-desc">Our AI reads your bill, detects anomalies and compares with your usage history.</div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">💰</div>
-            <div className="feature-title">Start Saving</div>
-            <div className="feature-desc">Get personalised tips and tariff comparisons to reduce your monthly bill.</div>
-          </div>
+        <p className="hero-fine">NO CREDIT CARD REQUIRED • INSTANT ANALYSIS</p>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="home-footer">
+        <p>© 2025 myEnergy_bill_optimization. All rights reserved.</p>
+        <div className="home-footer-links">
+          <span>BILL ANALYSIS</span>
+          <span>COST OPTIMIZATION</span>
+          <span>ENERGY SAVINGS</span>
         </div>
-      </div>
+      </footer>
+
     </div>
   );
 };
