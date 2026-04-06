@@ -22,10 +22,9 @@ const sendOtp = async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      // Generic message to prevent user enumeration
-      return res.status(200).json({
-        success: true,
-        message: "If that email exists, an OTP has been sent.",
+      return res.status(404).json({
+        success: false,
+        message: "User with this email does not exist.",
       });
     }
 

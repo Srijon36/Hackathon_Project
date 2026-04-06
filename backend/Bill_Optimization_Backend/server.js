@@ -6,43 +6,54 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
-
-// ✅ CORS must come before routes
 app.use(cors({
-  origin: "http://localhost:5173", // your frontend URL
+  origin: [
+    "http://localhost:5173",
+    "https://1313kfc0-5173.inc1.devtunnels.ms"
+  ],
   credentials: true,
 }));
 
-// ✅ express.json() and express.urlencoded() only parse
-// application/json and application/x-www-form-urlencoded
-// They do NOT interfere with multipart/form-data (multer handles that)
-// So this order is safe — but DO NOT add any body-parser for multipart
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 🔹 Import createDefaultAdmin
+const { createDefaultAdmin } = require("./controllers/registerController/registerController"); // ← NEW
 
 // 🔹 MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB Connected Successfully"))
+  .then(async () => {                                    // ← UPDATED
+    console.log("✅ MongoDB Connected Successfully");
+    await createDefaultAdmin();                          // ← NEW
+  })
   .catch((err) => console.log("❌ MongoDB Connection Failed:", err));
 
 // 🔹 Import Routes
-const billRoutes             = require("./routes/billRoute/billRoute");
-const registerRoutes         = require("./routes/registerRoute/registerRoute");
-const loginRoutes            = require("./routes/loginRoute/loginRoute");
-const analysisRoutes         = require("./routes/analysisRoute/analysisRoute");
-const uploadsRoutes          = require("./routes/uploadRoute/uploadRoute");
-const forgotPasswordRoutes   = require("./routes/forgotPasswordRoutes/forgotPasswordRoutes");
+const billRoutes           = require("./routes/billRoute/billRoute");
+const registerRoutes       = require("./routes/registerRoute/registerRoute");
+const loginRoutes          = require("./routes/loginRoute/loginRoute");
+const analysisRoutes       = require("./routes/analysisRoute/analysisRoute");
+const uploadsRoutes        = require("./routes/uploadRoute/uploadRoute");
+const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes/forgotPasswordRoutes");
+const applianceRoutes      = require("./routes/applianceRoute/applianceRoute");
+const predictionRoute      = require("./routes/predictRoute/predictRoute");
+const adminRoute           = require("./routes/adminRoute/adminRoute");
+const paymentRoute         = require("./routes/paymentRoute/paymentRoute");
 
 // 🔹 Use Routes
-app.use("/api/bills",              billRoutes);
-app.use("/api/logins",             loginRoutes);
-app.use("/api/registers",          registerRoutes);
-app.use("/api/analysis",           analysisRoutes);
-app.use("/api/uploads",            uploadsRoutes);
-app.use("/api/forgot-password",    forgotPasswordRoutes);
+app.use("/api/bills",           billRoutes);
+app.use("/api/logins",          loginRoutes);
+app.use("/api/registers",       registerRoutes);
+app.use("/api/analysis",        analysisRoutes);
+app.use("/api/uploads",         uploadsRoutes);
+app.use("/api/forgot-password", forgotPasswordRoutes);
+app.use("/api/appliances",      applianceRoutes);
+app.use("/api/predict",         predictionRoute);
+app.use("/api/admin",           adminRoute);
+app.use("/api/payment",         paymentRoute);
 
-// 🔹 Health Check Route
+// 🔹 Health Check
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,

@@ -1,5 +1,4 @@
 const { extractTextFromImage, extractTextFromPDF } = require("../../services/ocrService");
-const { parseBill } = require("../../services/aiParserService");
 const Bill = require("../../models/billModel/billModel");
 
 // ✅ Safe date helper — prevents "Invalid Date" mongoose cast errors
@@ -20,29 +19,31 @@ exports.scanAndCreateBill = async (req, res, next) => {
 
     const { mimetype, buffer } = req.file;
 
-    // Step 1: Extract text
-    let extractedText = "";
+    // Step 1: Send file directly to Claude Vision — returns parsed object
+    let billFields = {};
     if (mimetype === "application/pdf") {
-      extractedText = await extractTextFromPDF(buffer);
+      billFields = await extractTextFromPDF(buffer);
     } else {
-      extractedText = await extractTextFromImage(buffer);
+      billFields = await extractTextFromImage(buffer);
     }
-
-    console.log("📄 Extracted text length:", extractedText?.length);
-
-    if (!extractedText || extractedText.trim().length < 10) {
-      return res.status(422).json({
-        success: false,
-        message: "Could not extract text. Please upload a clearer image.",
-      });
-    }
-
-    // Step 2: Parse with AI
-    const billFields = await parseBill(extractedText);
 
     console.log("🤖 AI parsed fields:", billFields);
 
-    // Step 3: Safe defaults — prevent validation errors
+    // Basic sanity check — if everything is empty, reject
+    const hasData =
+      billFields.consumerNumber ||
+      billFields.customerName ||
+      billFields.netAmount > 0 ||
+      billFields.grossAmount > 0;
+
+    if (!hasData) {
+      return res.status(422).json({
+        success: false,
+        message: "Could not read bill. Please upload a clearer image or PDF.",
+      });
+    }
+
+    // Step 2: Safe defaults — prevent validation errors
     const safeBillData = {
       consumerNumber:     billFields.consumerNumber     || "N/A",
       customerName:       billFields.customerName       || "N/A",
@@ -64,11 +65,11 @@ exports.scanAndCreateBill = async (req, res, next) => {
       netAmount:          Number(billFields.netAmount)          || 0,
       loadKVA:            Number(billFields.loadKVA)            || 0,
       securityDeposit:    Number(billFields.securityDeposit)    || 0,
-      rawText:            extractedText,
+      rawText:            JSON.stringify(billFields), // store parsed fields as reference
       userId:             req.user.id,
     };
 
-    // Step 4: Save to DB
+    // Step 3: Save to DB
     const bill = await Bill.create(safeBillData);
 
     res.status(201).json({
