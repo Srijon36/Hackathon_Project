@@ -2,9 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
-
 dotenv.config();
-
 const app = express();
 app.use(cors({
   origin: [
@@ -13,19 +11,18 @@ app.use(cors({
   ],
   credentials: true,
 }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 🔹 Import createDefaultAdmin
-const { createDefaultAdmin } = require("./controllers/registerController/registerController"); // ← NEW
+const { createDefaultAdmin } = require("./controllers/registerController/registerController");
 
 // 🔹 MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(async () => {                                    // ← UPDATED
+  .then(async () => {
     console.log("✅ MongoDB Connected Successfully");
-    await createDefaultAdmin();                          // ← NEW
+    await createDefaultAdmin();
   })
   .catch((err) => console.log("❌ MongoDB Connection Failed:", err));
 
@@ -40,6 +37,7 @@ const applianceRoutes      = require("./routes/applianceRoute/applianceRoute");
 const predictionRoute      = require("./routes/predictRoute/predictRoute");
 const adminRoute           = require("./routes/adminRoute/adminRoute");
 const paymentRoute         = require("./routes/paymentRoute/paymentRoute");
+const subscriptionRoute    = require("./routes/subscriptionRoute/subscriptionRoute"); // ← ADD THIS
 
 // 🔹 Use Routes
 app.use("/api/bills",           billRoutes);
@@ -52,6 +50,7 @@ app.use("/api/appliances",      applianceRoutes);
 app.use("/api/predict",         predictionRoute);
 app.use("/api/admin",           adminRoute);
 app.use("/api/payment",         paymentRoute);
+app.use("/api/subscription",    subscriptionRoute);  // ← ADD THIS
 
 // 🔹 Health Check
 app.get("/", (req, res) => {

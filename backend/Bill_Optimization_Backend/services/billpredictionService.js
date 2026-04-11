@@ -1,32 +1,51 @@
+// services/billpredictionService.js
 const Anthropic = require("@anthropic-ai/sdk");
+const Appliance = require("../models/applianceModel/applianceModel");
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-/**
- * Predicts next month's electricity bill using Claude AI
- * @param {Array} billHistory - Array of last 3 bill objects from DB (oldest first)
- * @returns {Object} prediction result
- */
-const predictNextMonthBill = async (billHistory) => {
+const predictNextMonthBill = async (billHistory, userId) => {
   if (!billHistory || billHistory.length < 2) {
-    throw new Error(
-      "At least 2 months of bill history required for prediction"
-    );
+    throw new Error("At least 2 months of bill history required");
   }
 
-  // Format bill history using your exact schema fields
+  // ── Fetch appliance profile ──────────────────────────────────────────────
+  const applianceProfile = await Appliance.findOne({ userId });
+
+  // ── Calculate kWh/month for each appliance on the fly ───────────────────
+  let applianceSection = "No appliance profile provided.";
+  let totalApplianceKwh = 0;
+
+  if (applianceProfile?.appliances?.length) {
+    const applianceLines = applianceProfile.appliances.map((a) => {
+      const kwhPerMonth = parseFloat(
+        ((a.quantity * a.wattage * a.hoursPerDay * 30) / 1000).toFixed(2)
+      );
+      totalApplianceKwh += kwhPerMonth;
+      return `  - ${a.name}: ${a.quantity} unit(s) × ${a.wattage}W × ${a.hoursPerDay}hrs/day = ${kwhPerMonth} kWh/month`;
+    });
+
+    applianceSection = `
+Consumer Type: ${applianceProfile.consumerType}
+Appliances:
+${applianceLines.join("\n")}
+Total Estimated Appliance Consumption: ${totalApplianceKwh.toFixed(2)} kWh/month`;
+  }
+
+  // ── Format bill history ──────────────────────────────────────────────────
   const billSummary = billHistory
     .map((bill, index) => {
-      // Use billMonth if available, else fall back to date parsing
       const monthLabel =
         bill.billMonth && bill.billMonth !== "N/A"
           ? bill.billMonth
           : new Date(bill.billDate || bill.createdAt).toLocaleString(
-              "default",
-              { month: "long", year: "numeric" }
+              "default", { month: "long", year: "numeric" }
             );
+
+      const ratePerUnit =
+        bill.unitsBilled > 0
+          ? (bill.energyCharges / bill.unitsBilled).toFixed(2)
+          : "N/A";
 
       return `Month ${index + 1} (${monthLabel}):
   - Units Billed: ${bill.unitsBilled} kWh
@@ -37,29 +56,37 @@ const predictNextMonthBill = async (billHistory) => {
   - Adjustments: ₹${bill.adjustments}
   - Gross Amount: ₹${bill.grossAmount}
   - Rebate: ₹${bill.rebate}
-  - Net Amount (Final Payable): ₹${bill.netAmount}
-  - Cost per Unit: ₹${
-        bill.unitsBilled > 0
-          ? (bill.energyCharges / bill.unitsBilled).toFixed(2)
-          : "N/A"
-      }
+  - Net Amount: ₹${bill.netAmount}
+  - Rate per Unit: ₹${ratePerUnit}/kWh
   - Consumer Type: ${bill.consumerType}
   - Load (KVA): ${bill.loadKVA}`;
     })
     .join("\n\n");
 
-  const prompt = `You are an expert electricity bill analyst in India. Based on the following electricity bill history, predict the next month's bill accurately.
+  // ── Latest rate per unit for appliance cost context ──────────────────────
+  const latestBill = billHistory[billHistory.length - 1];
+  const ratePerUnit =
+    latestBill.unitsBilled > 0
+      ? (latestBill.energyCharges / latestBill.unitsBilled).toFixed(2)
+      : 5.0;
 
-BILL HISTORY:
+  // ── Claude prompt ────────────────────────────────────────────────────────
+  const prompt = `You are an expert electricity bill analyst in India.
+
+BILL HISTORY (oldest to newest):
 ${billSummary}
 
-Analyze the trend in units consumed, energy charges, and net amount. Consider:
-- Usage trend (increasing/decreasing/stable)
-- Fixed charges that remain constant (fixed demand charges, meter rent)
-- Variable charges that depend on units (energy charges, govt duty)
-- Any rebates applied previously
+HOUSEHOLD APPLIANCE PROFILE:
+${applianceSection}
+Current rate per unit: ₹${ratePerUnit}/kWh
 
-Predict next month's bill. Respond ONLY in this exact JSON format with no extra text, no markdown, no backticks:
+Using both the bill history AND the appliance profile:
+1. Cross-reference actual billed units vs estimated appliance consumption
+2. Identify which appliances are likely driving consumption trends
+3. Consider fixed charges (meter rent, fixed demand) that stay constant
+4. Factor in seasonal patterns if visible across months
+
+Respond ONLY in this exact JSON format, no markdown, no backticks:
 {
   "predictedUnits": <number>,
   "predictedEnergyCharges": <number>,
@@ -67,8 +94,9 @@ Predict next month's bill. Respond ONLY in this exact JSON format with no extra 
   "predictedNetAmount": <number>,
   "trend": "<increasing | decreasing | stable>",
   "trendPercentage": <number>,
-  "reason": "<2-3 line explanation of why you predicted this>",
-  "savingTip": "<one specific actionable energy saving tip based on this usage pattern>"
+  "reason": "<3-4 lines explaining prediction using BOTH bill history and appliance data>",
+  "topConsumingAppliance": "<appliance name driving most consumption>",
+  "savingTip": "<specific tip targeting the top consuming appliance>"
 }`;
 
   const response = await client.messages.create({
@@ -77,29 +105,27 @@ Predict next month's bill. Respond ONLY in this exact JSON format with no extra 
     messages: [{ role: "user", content: prompt }],
   });
 
-  // Extract text from Claude response
   const rawText = response.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
     .join("");
 
-  // Clean and parse JSON safely
-  const cleanJson = rawText.replace(/```json|```/g, "").trim();
-  const prediction = JSON.parse(cleanJson);
+  const prediction = JSON.parse(rawText.replace(/```json|```/g, "").trim());
 
   return {
     success: true,
     prediction: {
-      predictedUnits: prediction.predictedUnits,
+      predictedUnits:        prediction.predictedUnits,
       predictedEnergyCharges: prediction.predictedEnergyCharges,
-      predictedGrossAmount: prediction.predictedGrossAmount,
-      predictedNetAmount: prediction.predictedNetAmount,
-      trend: prediction.trend,
-      trendPercentage: Math.abs(prediction.trendPercentage),
-      reason: prediction.reason,
-      savingTip: prediction.savingTip,
+      predictedGrossAmount:  prediction.predictedGrossAmount,
+      predictedNetAmount:    prediction.predictedNetAmount,
+      trend:                 prediction.trend,
+      trendPercentage:       Math.abs(prediction.trendPercentage),
+      reason:                prediction.reason,
+      topConsumingAppliance: prediction.topConsumingAppliance,
+      savingTip:             prediction.savingTip,
     },
-    basedOn: billHistory.length,
+    basedOn:     billHistory.length,
     generatedAt: new Date().toISOString(),
   };
 };

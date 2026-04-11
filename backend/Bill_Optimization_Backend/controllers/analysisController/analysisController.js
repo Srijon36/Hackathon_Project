@@ -1,7 +1,7 @@
 const Bill = require("../../models/billModel/billModel");
 
 // 🔹 Generate Analysis for a Bill
-exports.getBillAnalysis = async (req, res,next) => {
+exports.getBillAnalysis = async (req, res, next) => {
   try {
     const { billId } = req.params;
 
@@ -14,49 +14,10 @@ exports.getBillAnalysis = async (req, res,next) => {
       });
     }
 
-    // 🔹 Calculations
-    const costPerUnit = bill.energyCharges / bill.unitsBilled;
-
-    const averageDailyUsage = bill.unitsBilled / 30;
-
-    const estimatedNextBill = bill.netAmount * 1.05;
-
-    // 🔹 Usage Category
-    let usageCategory = "Normal";
-
-    if (bill.unitsBilled < 100) {
-      usageCategory = "Low Consumption";
-    } else if (bill.unitsBilled >= 100 && bill.unitsBilled < 300) {
-      usageCategory = "Moderate Consumption";
-    } else {
-      usageCategory = "High Consumption";
-    }
-
-    // 🔹 Energy Saving Suggestions
-    let savingTips = [];
-
-    if (costPerUnit > 8) {
-      savingTips.push("Electricity cost per unit is high. Try reducing heavy appliance usage.");
-    }
-
-    if (bill.unitsBilled > 200) {
-      savingTips.push("Consider using energy-efficient appliances.");
-    }
-
-    savingTips.push("Turn off unused lights and devices.");
-    savingTips.push("Use LED bulbs instead of incandescent bulbs.");
-
+    // ✅ Return the full bill object so frontend fields match directly
     res.status(200).json({
       success: true,
-      billId: bill._id,
-      billMonth: bill.billMonth,
-      totalUnits: bill.unitsBilled,
-      totalAmount: bill.netAmount,
-      costPerUnit: costPerUnit.toFixed(2),
-      averageDailyUsage: averageDailyUsage.toFixed(2),
-      estimatedNextBill: estimatedNextBill.toFixed(2),
-      usageCategory,
-      savingTips
+      data: bill, // frontend does: const bill = analysisData?.data || analysisData
     });
 
   } catch (error) {
@@ -69,9 +30,8 @@ exports.getBillAnalysis = async (req, res,next) => {
 
 
 // 🔹 Compare Last 2 Bills
-exports.compareBills = async (req, res,next) => {
+exports.compareBills = async (req, res, next) => {
   try {
-
     const bills = await Bill.find()
       .sort({ billDate: -1 })
       .limit(2);
@@ -83,16 +43,27 @@ exports.compareBills = async (req, res,next) => {
       });
     }
 
-    const latest = bills[0];
-    const previous = bills[1];
+    const currentBill  = bills[0];
+    const previousBill = bills[1];
 
-    const unitDifference = latest.unitsBilled - previous.unitsBilled;
-    const costDifference = latest.netAmount - previous.netAmount;
+    const unitDifference = currentBill.unitsBilled - previousBill.unitsBilled;
+    const costDifference = currentBill.netAmount   - previousBill.netAmount;
 
+    // ✅ Return shape matches frontend:
+    // comparisonData.currentBill.netAmount / .unitsBilled
+    // comparisonData.previousBill.netAmount / .unitsBilled
     res.status(200).json({
       success: true,
-      latestBillMonth: latest.billMonth,
-      previousBillMonth: previous.billMonth,
+      currentBill:  {
+        billMonth:   currentBill.billMonth,
+        netAmount:   currentBill.netAmount,
+        unitsBilled: currentBill.unitsBilled,
+      },
+      previousBill: {
+        billMonth:   previousBill.billMonth,
+        netAmount:   previousBill.netAmount,
+        unitsBilled: previousBill.unitsBilled,
+      },
       unitDifference,
       costDifference,
       message:
