@@ -13,6 +13,146 @@ const APPLIANCE_COLORS = [
   "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#f97316"
 ];
 
+// ── Smart Tips Engine ─────────────────────────────────────────────────────────
+const generateTips = (bill, comparisonData) => {
+  const tips = [];
+  const units      = bill.unitsBilled    || 0;
+  const netAmount  = bill.netAmount      || 0;
+  const grossAmount= bill.grossAmount    || 0;
+  const costPerUnit= units > 0 ? netAmount / units : 0;
+  const rebate     = bill.rebate         || 0;
+  const govtDuty   = bill.govtDuty       || 0;
+  const fixedCharge= bill.fixedDemandCharges || 0;
+  const loadKVA    = bill.loadKVA        || 0;
+  const dailyUnits = units / 30;
+
+  // ── 1. Payment Status ──────────────────────────────────────────────────────
+  if (bill.paymentStatus === "Overdue") {
+    tips.push({
+      icon: "🚨", color: "#ef4444", bg: "#fef2f2", border: "#fecaca", priority: 0,
+      title: "Bill Overdue — Pay Immediately",
+      detail: `Your ₹${netAmount.toLocaleString("en-IN")} bill is overdue. Late payment typically attracts a 1.5–2% surcharge per month — that's ₹${Math.round(netAmount * 0.02).toLocaleString("en-IN")} extra if unpaid this month.`,
+    });
+  }
+
+  // ── 2. Cost per unit analysis ──────────────────────────────────────────────
+  if (costPerUnit > 9) {
+    tips.push({
+      icon: "⚡", color: "#ef4444", bg: "#fef2f2", border: "#fecaca", priority: 1,
+      title: `High Cost Per Unit — ₹${costPerUnit.toFixed(2)}/kWh`,
+      detail: `You're paying ₹${costPerUnit.toFixed(2)} per unit, which is above the average domestic rate of ₹7–8. This often happens due to exceeding slab limits. Reducing consumption by just 20 units could drop you to a lower slab and save ₹${Math.round(20 * (costPerUnit - 7)).toLocaleString("en-IN")}.`,
+    });
+  } else if (costPerUnit > 7) {
+    tips.push({
+      icon: "⚡", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", priority: 2,
+      title: `Moderate Cost Per Unit — ₹${costPerUnit.toFixed(2)}/kWh`,
+      detail: `Your per-unit rate of ₹${costPerUnit.toFixed(2)} is within normal range but approaching the higher slab. Watch your usage to avoid crossing the next threshold.`,
+    });
+  }
+
+  // ── 3. Consumption level ───────────────────────────────────────────────────
+  if (units > 500) {
+    tips.push({
+      icon: "🔴", color: "#ef4444", bg: "#fef2f2", border: "#fecaca", priority: 1,
+      title: `Very High Consumption — ${units} kWh`,
+      detail: `At ${units} kWh (${dailyUnits.toFixed(1)} units/day), you're in the highest tariff slab. Reducing by 100 units could save approximately ₹${Math.round(100 * costPerUnit).toLocaleString("en-IN")}. AC and water heaters are the biggest culprits at this usage level.`,
+    });
+  } else if (units > 300) {
+    tips.push({
+      icon: "🟠", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", priority: 2,
+      title: `High Consumption — ${units} kWh (${dailyUnits.toFixed(1)} units/day)`,
+      detail: `You're using ${dailyUnits.toFixed(1)} units daily. Reducing AC usage by 1 hour/day saves ~1.5 kWh, which over a month is 45 kWh — worth ₹${Math.round(45 * costPerUnit).toLocaleString("en-IN")} at your current rate.`,
+    });
+  } else if (units < 50) {
+    tips.push({
+      icon: "🟢", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", priority: 3,
+      title: `Low Consumption — ${units} kWh`,
+      detail: `Your consumption is very efficient at ${units} kWh. Make sure you're not being overcharged — verify meter readings match your bill.`,
+    });
+  }
+
+  // ── 4. Comparison with previous bill ──────────────────────────────────────
+  if (comparisonData?.previousBill?.unitsBilled > 0) {
+    const prevUnits  = comparisonData.previousBill.unitsBilled;
+    const prevAmount = comparisonData.previousBill.netAmount;
+    const unitChange = units - prevUnits;
+    const amtChange  = netAmount - prevAmount;
+    const unitPct    = Math.abs(Math.round((unitChange / prevUnits) * 100));
+
+    if (unitChange > 0) {
+      tips.push({
+        icon: "📈", color: "#ef4444", bg: "#fef2f2", border: "#fecaca", priority: 1,
+        title: `Consumption Up ${unitPct}% vs Last Bill`,
+        detail: `You used ${unitChange} more units than ${comparisonData.previousBill.billMonth} (${prevUnits} kWh → ${units} kWh), adding ₹${Math.abs(Math.round(amtChange)).toLocaleString("en-IN")} to your bill. Check if you added any new appliances or left AC/heater running overnight.`,
+      });
+    } else if (unitChange < 0) {
+      tips.push({
+        icon: "📉", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", priority: 3,
+        title: `Great! Consumption Down ${unitPct}% vs Last Bill`,
+        detail: `You saved ${Math.abs(unitChange)} units compared to ${comparisonData.previousBill.billMonth}, reducing your bill by ₹${Math.abs(Math.round(amtChange)).toLocaleString("en-IN")}. Keep up the good habits!`,
+      });
+    }
+  }
+
+  // ── 5. Rebate / savings analysis ───────────────────────────────────────────
+  if (rebate > 0) {
+    const rebatePct = grossAmount > 0 ? ((rebate / grossAmount) * 100).toFixed(1) : 0;
+    tips.push({
+      icon: "🎯", color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", priority: 3,
+      title: `You Saved ₹${rebate.toLocaleString("en-IN")} via Rebate (${rebatePct}%)`,
+      detail: `A rebate of ₹${rebate.toLocaleString("en-IN")} was applied to your bill. This could be an early payment discount or a government subsidy. Pay before the due date each month to keep earning this rebate.`,
+    });
+  } else if (grossAmount > 0 && rebate === 0 && bill.paymentStatus !== "Overdue") {
+    tips.push({
+      icon: "💰", color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", priority: 2,
+      title: "You May Qualify for an Early Payment Rebate",
+      detail: `No rebate was applied this month. Many DISCOMs offer 1–2% rebate for paying before the due date. On your ₹${grossAmount.toLocaleString("en-IN")} bill that's up to ₹${Math.round(grossAmount * 0.02).toLocaleString("en-IN")} savings.`,
+    });
+  }
+
+  // ── 6. Fixed / demand charges ──────────────────────────────────────────────
+  if (fixedCharge > 0 && units > 0) {
+    const fixedPct = ((fixedCharge / netAmount) * 100).toFixed(1);
+    if (parseFloat(fixedPct) > 20) {
+      tips.push({
+        icon: "📋", color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", priority: 2,
+        title: `Fixed Charges Are ${fixedPct}% of Your Bill`,
+        detail: `Your fixed/demand charges of ₹${fixedCharge.toLocaleString("en-IN")} are a large portion of your bill. These are based on your sanctioned load of ${loadKVA} KVA. If you rarely use heavy appliances, apply to your DISCOM to reduce your sanctioned load — this can lower fixed charges permanently.`,
+      });
+    }
+  }
+
+  // ── 7. Load KVA analysis ───────────────────────────────────────────────────
+  if (loadKVA > 10) {
+    tips.push({
+      icon: "🔌", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", priority: 2,
+      title: `High Sanctioned Load — ${loadKVA} KVA`,
+      detail: `Your connection has a ${loadKVA} KVA load. If your actual peak usage is lower, request a load reduction from your DISCOM. This directly reduces your fixed demand charges every month.`,
+    });
+  }
+
+  // ── 8. Govt duty ──────────────────────────────────────────────────────────
+  if (govtDuty > 150) {
+    tips.push({
+      icon: "🏛️", color: "#64748b", bg: "#f8fafc", border: "#e2e8f0", priority: 3,
+      title: `Govt Duty — ₹${govtDuty.toLocaleString("en-IN")}`,
+      detail: `You're paying ₹${govtDuty.toLocaleString("en-IN")} in government duty. Senior citizens and BPL households may be eligible for exemptions. Check with your DISCOM if you qualify for a reduced duty category.`,
+    });
+  }
+
+  // ── 9. Daily usage insight ─────────────────────────────────────────────────
+  if (units > 100) {
+    tips.push({
+      icon: "📊", color: "#06b6d4", bg: "#ecfeff", border: "#a5f3fc", priority: 3,
+      title: `Daily Usage: ${dailyUnits.toFixed(1)} units/day = ₹${(dailyUnits * costPerUnit).toFixed(0)}/day`,
+      detail: `You spend about ₹${(dailyUnits * costPerUnit).toFixed(0)} per day on electricity. Small changes like switching off standby devices (saves ~0.5 units/day) add up to ₹${Math.round(0.5 * costPerUnit * 30).toLocaleString("en-IN")}/month.`,
+    });
+  }
+
+  // Sort by priority (lower = more urgent)
+  return tips.sort((a, b) => a.priority - b.priority);
+};
+
 const calculateGenericBreakdown = (totalUnits, netAmount) => {
   if (!totalUnits || totalUnits === 0) return [];
   const costPerUnit = (netAmount || 0) / totalUnits;
@@ -70,7 +210,6 @@ const TrendBadge = ({ trend, pct }) => {
   );
 };
 
-// ✅ PredictionCard owns its own useEffect — never fired by the parent
 const PredictionCard = () => {
   const dispatch = useDispatch();
   const { prediction, predicting, predictionError, basedOn, generatedAt } =
@@ -78,7 +217,7 @@ const PredictionCard = () => {
 
   useEffect(() => {
     dispatch(predictNextBill());
-  }, [dispatch]); // fires exactly once on mount
+  }, [dispatch]);
 
   const formattedTime = generatedAt
     ? new Date(generatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
@@ -196,7 +335,6 @@ const AnalysisPage = () => {
       dispatch(compareBills());
     }
     dispatch(getApplianceProfile());
-    // ✅ NO predictNextBill() here — PredictionCard handles it
   }, [id, dispatch]);
 
   if (loading) return (
@@ -235,6 +373,9 @@ const AnalysisPage = () => {
 
   const saved   = (bill.grossAmount || 0) - (bill.netAmount || 0);
   const percent = bill.grossAmount > 0 ? Math.round((saved / bill.grossAmount) * 100) : 0;
+
+  // ── Generate smart tips from real bill data ──────────────────────────────
+  const tips = generateTips(bill, comparisonData);
 
   return (
     <div className="dash-page">
@@ -364,28 +505,42 @@ const AnalysisPage = () => {
         </div>
       </div>
 
+      {/* ── Smart Recommendations ─────────────────────────────────────────── */}
       <div className="chart-card" style={{ marginTop: "24px" }}>
         <h3>💡 Smart Recommendations</h3>
-        <ul className="tips-list">
-          {(bill.unitsBilled || 0) > 300 && (
-            <li className="tip-item"><span className="tip-dot" />❄️ High usage detected — consider reducing AC usage by 1–2 hours daily</li>
-          )}
-          {(bill.energyCharges || 0) > 1000 && (
-            <li className="tip-item"><span className="tip-dot" />💡 Switch to LED bulbs — saves up to 80% on lighting costs</li>
-          )}
-          {bill.paymentStatus === "Overdue" && (
-            <li className="tip-item"><span className="tip-dot red" />⚠️ Bill is overdue — pay immediately to avoid penalties</li>
-          )}
-          {(bill.loadKVA || 0) > 5 && (
-            <li className="tip-item"><span className="tip-dot amber" />🔌 High load detected — unplug unused devices and chargers</li>
-          )}
-          {(bill.govtDuty || 0) > 100 && (
-            <li className="tip-item"><span className="tip-dot" />🏛️ Check if you qualify for govt duty subsidies</li>
-          )}
-          <li className="tip-item"><span className="tip-dot" />🌡️ Set AC to 24°C instead of 18°C — saves up to 20% on cooling costs</li>
-          <li className="tip-item"><span className="tip-dot" />🌙 Run washing machine and dishwasher during off-peak hours</li>
-          <li className="tip-item"><span className="tip-dot" />🧊 Keep refrigerator away from direct sunlight and walls</li>
-        </ul>
+        <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px", marginTop: "4px" }}>
+          Personalised insights based on your {bill.billMonth} bill data
+        </p>
+
+        {tips.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "32px", color: "#94a3b8" }}>
+            ✅ Your bill looks healthy — no major issues detected.
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {tips.map((tip, i) => (
+              <div key={i} style={{
+                background: tip.bg,
+                border: `1px solid ${tip.border}`,
+                borderRadius: "12px",
+                padding: "16px 18px",
+                display: "flex",
+                gap: "14px",
+                alignItems: "flex-start",
+              }}>
+                <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{tip.icon}</span>
+                <div>
+                  <p style={{ margin: "0 0 5px 0", fontSize: "14px", fontWeight: 700, color: tip.color }}>
+                    {tip.title}
+                  </p>
+                  <p style={{ margin: 0, fontSize: "13px", color: "#475569", lineHeight: 1.6 }}>
+                    {tip.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

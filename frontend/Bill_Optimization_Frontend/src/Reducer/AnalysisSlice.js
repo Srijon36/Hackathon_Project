@@ -6,7 +6,7 @@ export const getBillAnalysis = createAsyncThunk(
   "analysis/getBillAnalysis",
   async (billId, { rejectWithValue }) => {
     try {
-      const res = await api.get(`/analysis/bill-analysis/${billId}`);
+      const res = await api.get(`analysis/bill-analysis/${billId}`); // ✅ removed leading /
       return res.data;
     } catch (err) {
       return rejectWithValue(
@@ -21,7 +21,7 @@ export const compareBills = createAsyncThunk(
   "analysis/compareBills",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/analysis/compare-bills");
+      const res = await api.get("analysis/compare-bills"); // ✅ removed leading /
       return res.data;
     } catch (err) {
       return rejectWithValue(
@@ -36,7 +36,7 @@ export const predictNextBill = createAsyncThunk(
   "analysis/predictNextBill",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/predict");
+      const res = await api.get("predict/next-month"); // ✅ removed leading /
       return res.data;
     } catch (err) {
       return rejectWithValue(
@@ -102,8 +102,6 @@ const analysisSlice = createSlice({
       })
 
       // ── Compare Bills ──────────────────────────────────────────────────
-      // Uses its own `comparing` flag — never touches `loading`
-      // so the page spinner is not re-triggered
       .addCase(compareBills.pending, (state) => {
         state.comparing      = true;
         state.comparisonError = null;
@@ -118,15 +116,12 @@ const analysisSlice = createSlice({
       })
 
       // ── Predict Next Bill ──────────────────────────────────────────────
-      // Fully isolated — never touches `loading` or `comparing`
       .addCase(predictNextBill.pending, (state) => {
         state.predicting      = true;
         state.predictionError = null;
       })
       .addCase(predictNextBill.fulfilled, (state, action) => {
         state.predicting  = false;
-        // Backend returns { success, prediction: {...}, basedOn, generatedAt }
-        // We store the nested prediction object and the metadata separately
         state.prediction  = action.payload.prediction ?? action.payload;
         state.basedOn     = action.payload.basedOn    ?? 0;
         state.generatedAt = action.payload.generatedAt ?? null;

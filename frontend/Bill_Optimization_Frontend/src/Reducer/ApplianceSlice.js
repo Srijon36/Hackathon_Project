@@ -6,7 +6,7 @@ export const saveApplianceProfile = createAsyncThunk(
   "appliance/save",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await api.post("/appliances/save", data);
+      const res = await api.post("appliances/save", data); // ✅ removed leading /
       return res.data;
     } catch (err) {
       return rejectWithValue(
@@ -21,7 +21,7 @@ export const getApplianceProfile = createAsyncThunk(
   "appliance/get",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get("/appliances/get");
+      const res = await api.get("appliances/profile"); // ✅ removed leading /
       return res.data;
     } catch (err) {
       return rejectWithValue(

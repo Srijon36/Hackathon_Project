@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 
 import Navbar         from "./pages/Navbar";
 import Home           from "./pages/Home";
@@ -11,8 +13,10 @@ import BillDetail     from "./pages/BillDetail";
 import AnalysisPage   from "./pages/AnalysisPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import Appliances     from "./pages/Appliances";
-import AdminPanel     from "./pages/AdminPanel";        // ← NEW
-import AdminRoute     from "./pages/AdminRoute";  // ← NEW
+import AdminPanel     from "./pages/AdminPanel";
+import AdminRoute     from "./pages/AdminRoute";
+import HistoryPanel   from "./pages/HistoryPanel";
+import { getAllBills } from "./Reducer/BillSlice";
 
 const ProtectedRoute = ({ children }) => {
   const stored = sessionStorage.getItem("energy_token");
@@ -22,22 +26,37 @@ const ProtectedRoute = ({ children }) => {
 
 const AppLayout = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
 
-  // ← UPDATED: added "/admin"
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const { bills } = useSelector(s => s.bill);
+
   const hideNavbarRoutes = ["/", "/login", "/register", "/forgot-password", "/admin"];
   const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
+  const handleHistoryOpen = () => {
+    dispatch(getAllBills()); // ensure bills are fresh
+    setHistoryOpen(true);
+  };
+
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {!hideNavbar && (
+        <Navbar onHistoryOpen={handleHistoryOpen} />
+      )}
+
+      <HistoryPanel
+        bills={bills}
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+      />
+
       <Routes>
-        {/* ── Public Routes ── */}
         <Route path="/"                element={<Home />} />
         <Route path="/login"           element={<Login />} />
         <Route path="/register"        element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* ── Protected Routes ── */}
         <Route path="/appliances" element={
           <ProtectedRoute><Appliances /></ProtectedRoute>
         } />
@@ -57,20 +76,16 @@ const AppLayout = () => {
           <ProtectedRoute><DownloadReport /></ProtectedRoute>
         } />
 
-        {/* ── Admin Route ── */}        {/* ← NEW */}
         <Route path="/admin" element={
           <AdminRoute><AdminPanel /></AdminRoute>
         } />
 
-        {/* ── 404 ── */}
         <Route path="*" element={
           <div className="loader-container">
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "64px" }}>🔍</div>
               <h2>404 — Page Not Found</h2>
-              <p style={{ color: "#64748b" }}>
-                The page you're looking for doesn't exist.
-              </p>
+              <p style={{ color: "#64748b" }}>The page you're looking for doesn't exist.</p>
               <a href="/" style={{ color: "#3b82f6" }}>Go Home</a>
             </div>
           </div>
