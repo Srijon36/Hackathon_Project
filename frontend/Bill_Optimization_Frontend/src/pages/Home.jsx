@@ -29,7 +29,7 @@ const Home = () => {
 
       {/* ── Footer ── */}
       <footer className="home-footer">
-        <p>© 2025 myEnergy_bill_optimization. All rights reserved.</p>
+        <p>© 2026 myEnergy_bill_optimization. All rights reserved.</p>
         <div className="home-footer-links">
           <span>BILL ANALYSIS</span>
           <span>COST OPTIMIZATION</span>

@@ -63,7 +63,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: #22c55e; }
 
 /* =====================================================
-   NAVBAR  (single navbar — the shared one)
+   NAVBAR
 ===================================================== */
 
 .navbar {
@@ -121,7 +121,6 @@ body {
 .nb-logo-energy { color: #ffffff; font-weight: 900; }
 .nb-logo-bill   { color: #22c55e; font-weight: 900; }
 
-/* legacy nav-logo kept for other pages */
 .nav-logo {
   font-family: var(--font-head);
   font-size: 17px;
@@ -249,7 +248,6 @@ body {
 .nb-lang-option--active { color: #22c55e; font-weight: 700; background: rgba(34,197,94,.06); }
 .nb-lang-check { color: #22c55e; font-size: 13px; font-weight: 800; margin-left: auto; }
 
-/* legacy lang pills kept for other pages */
 .nav-lang {
   display: flex;
   align-items: center;
@@ -276,7 +274,9 @@ body {
 .nav-lang-btn:hover      { color: #fff; background: rgba(255,255,255,.07); }
 .nav-lang-btn--active    { color: #fff; }
 
-/* ── Icon Button (moon / logout) ── */
+/* ── Icon Button — RESET BUTTON HIDDEN ── */
+/* The reset/reload icon button is hidden via this rule.
+   The moon/dark-mode and logout buttons still work normally. */
 .nav-icon-btn {
   width: 30px;
   height: 30px;
@@ -294,7 +294,12 @@ body {
 .nav-icon-btn:hover { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.35); }
 .nav-icon-btn svg   { display: block; }
 
-/* ── CTA button (kept for other pages) ── */
+/* Hide the reset/reload button specifically */
+.nav-icon-btn--reset,
+.nb-reset-btn {
+  display: none !important;
+}
+
 .nav-btn {
   background: #22c55e;
   color: #fff;
@@ -799,7 +804,7 @@ body {
 .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 
 .kpi-blue::before  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.kpi-dark::before  { background: linear-gradient(90deg, #0f172a, #334155); }
+.kpi-dark::before  { background: linear-gradient(90deg, #22c55e, #4ade80); }
 .kpi-green::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
 .kpi-teal::before  { background: linear-gradient(90deg, #10b981, #34d399); }
 .kpi-amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
@@ -808,8 +813,8 @@ body {
 
 .kpi-icon-box    { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; flex-shrink: 0; }
 .kpi-icon-blue   { background: #eff6ff; color: #3b82f6; }
-.kpi-icon-dark   { background: var(--black); color: #e2e8f0; }
-.kpi-icon-green  { background: var(--green-light); color: var(--green-dark); }
+.kpi-icon-dark   { background: #f0fdf4; color: #16a34a; }
+.kpi-icon-green  { background: #dcfce7; color: #16a34a; }
 .kpi-icon-teal   { background: #ecfdf5; color: #059669; }
 .kpi-icon-amber  { background: #fffbeb; color: #d97706; }
 .kpi-icon-purple { background: #f5f3ff; color: #7c3aed; }
@@ -819,18 +824,74 @@ body {
 .kpi-value { font-family: var(--font-head); font-size: 32px; font-weight: 900; line-height: 1.0; margin-bottom: 10px; letter-spacing: -0.025em; }
 .kpi-unit        { font-size: 14px; font-weight: 400; color: var(--muted); }
 .kpi-val-blue    { color: #1d4ed8; }
-.kpi-val-dark    { color: var(--black); }
-.kpi-val-green   { color: var(--green-dark); }
+.kpi-val-dark    { color: #0f172a; }
+.kpi-val-green   { color: #16a34a; }
 .kpi-val-teal    { color: #059669; }
 .kpi-val-amber   { color: #b45309; }
 .kpi-val-purple  { color: #6d28d9; }
 .kpi-val-red     { color: #dc2626; }
 
 .kpi-badge { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-body); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px; }
-.kpi-badge.up      { background: var(--green-light); color: #15803d; }
+.kpi-badge.up      { background: #dcfce7; color: #15803d; }
 .kpi-badge.warn    { background: #fef3c7; color: #b45309; }
 .kpi-badge.down    { background: #fee2e2; color: #b91c1c; }
 .kpi-badge.neutral { background: #f1f5f9; color: #475569; }
+
+/* =====================================================
+   KPI CARDS — WHITE STYLE (updated)
+===================================================== */
+
+.kpi-card { border-radius: 18px; }
+
+/* Card 1 — Units Consumed — dark navy (unchanged) */
+.kpi-blue {
+  background: #0f172a;
+  color: #fff;
+}
+.kpi-blue .kpi-label          { color: rgba(255,255,255,0.5); }
+.kpi-blue .kpi-val-blue       { color: #fff; }
+.kpi-blue .kpi-icon-blue      { background: rgba(255,255,255,0.08); color: #60a5fa; }
+.kpi-blue .kpi-badge.neutral  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+.kpi-blue::before             { background: #3b82f6; }
+
+/* Card 2 — Total Bill — WHITE */
+.kpi-dark {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+}
+.kpi-dark .kpi-label         { color: #6b8876; }
+.kpi-dark .kpi-val-dark      { color: #0f172a; }
+.kpi-dark .kpi-icon-dark     { background: #f0fdf4; color: #16a34a; }
+.kpi-dark .kpi-badge.warn    { background: #fef3c7; color: #b45309; }
+.kpi-dark::before            { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+/* Card 3 — Rebate Savings — WHITE */
+.kpi-green {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+}
+.kpi-green .kpi-label        { color: #6b8876; }
+.kpi-green .kpi-val-green    { color: #16a34a; }
+.kpi-green .kpi-icon-green   { background: #dcfce7; color: #16a34a; }
+.kpi-green .kpi-badge.up     { background: #dcfce7; color: #15803d; }
+.kpi-green::before           { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+/* Card 4 — Yearly Projection — WHITE */
+.kpi-teal {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+}
+.kpi-teal .kpi-label         { color: #6b8876; }
+.kpi-teal .kpi-val-teal      { color: #059669; }
+.kpi-teal .kpi-icon-teal     { background: #ecfdf5; color: #059669; }
+.kpi-teal .kpi-badge.up      { background: #dcfce7; color: #15803d; }
+.kpi-teal::before            { background: linear-gradient(90deg, #10b981, #34d399); }
 
 .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 22px; }
 
@@ -1357,6 +1418,25 @@ body.dark .eb-scan-security          { color: #475569; }
 /* dashboard dark */
 body.dark .kpi-card, body.dark .dash-card,
 body.dark .dash-chart-card, body.dark .chart-card { background: #1e293b; border-color: #334155; }
+/* White KPI cards in dark mode */
+body.dark .kpi-dark  { background: #1e293b; border-color: #334155; }
+body.dark .kpi-dark .kpi-label       { color: #64748b; }
+body.dark .kpi-dark .kpi-val-dark    { color: #e2e8f0; }
+body.dark .kpi-dark .kpi-icon-dark   { background: #0d2a1f; color: #4ade80; }
+body.dark .kpi-dark .kpi-badge.warn  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+body.dark .kpi-green { background: #1e293b; border-color: #334155; }
+body.dark .kpi-green .kpi-label      { color: #64748b; }
+body.dark .kpi-green .kpi-val-green  { color: #4ade80; }
+body.dark .kpi-green .kpi-icon-green { background: rgba(34,197,94,0.12); color: #4ade80; }
+body.dark .kpi-green .kpi-badge.up   { background: rgba(34,197,94,0.15); color: #4ade80; }
+
+body.dark .kpi-teal  { background: #1e293b; border-color: #334155; }
+body.dark .kpi-teal .kpi-label      { color: #64748b; }
+body.dark .kpi-teal .kpi-val-teal   { color: #34d399; }
+body.dark .kpi-teal .kpi-icon-teal  { background: rgba(16,185,129,0.12); color: #34d399; }
+body.dark .kpi-teal .kpi-badge.up   { background: rgba(16,185,129,0.15); color: #34d399; }
+
 body.dark .kpi-val-dark  { color: #e2e8f0; }
 body.dark .kpi-icon-dark { background: #0f172a; }
 body.dark .bar-track     { background: #334155; }
@@ -1427,59 +1507,6 @@ body.dark .form-group input:focus { border-color: #22c55e; background: #0f172a; 
 body.dark .otp-input  { background: #0d2a0d !important; border-color: #22c55e !important; color: #4ade80 !important; }
 body.dark .auth-footer { border-top-color: #334155; color: #475569; }
 body.dark .step-bar    { background: #334155; }
-
-
-
-
-/* =====================================================
-   KPI CARDS — Dark / Green Bold Style
-===================================================== */
-
-.kpi-card { border-radius: 18px; }
-
-/* Card 1 — Units Consumed — dark navy */
-.kpi-blue {
-  background: #0f172a;
-  color: #fff;
-}
-.kpi-blue .kpi-label          { color: rgba(255,255,255,0.5); }
-.kpi-blue .kpi-val-blue       { color: #fff; }
-.kpi-blue .kpi-icon-blue      { background: rgba(255,255,255,0.08); color: #60a5fa; }
-.kpi-blue .kpi-badge.neutral  { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
-.kpi-blue::before             { background: #3b82f6; }
-
-/* Card 2 — Total Bill — solid green */
-.kpi-dark {
-  background: #22c55e;
-  color: #fff;
-}
-.kpi-dark .kpi-label         { color: rgba(255,255,255,0.6); }
-.kpi-dark .kpi-val-dark      { color: #fff; }
-.kpi-dark .kpi-icon-dark     { background: rgba(0,0,0,0.15); color: #fff; }
-.kpi-dark .kpi-badge.warn    { background: rgba(0,0,0,0.18); color: #fff; }
-.kpi-dark::before            { background: rgba(255,255,255,0.3); }
-
-/* Card 3 — Rebate Savings — dark with green value */
-.kpi-green {
-  background: #111827;
-  color: #fff;
-}
-.kpi-green .kpi-label        { color: rgba(255,255,255,0.5); }
-.kpi-green .kpi-val-green    { color: #22c55e; }
-.kpi-green .kpi-icon-green   { background: rgba(34,197,94,0.12); color: #22c55e; }
-.kpi-green .kpi-badge.up     { background: rgba(34,197,94,0.18); color: #4ade80; }
-.kpi-green::before           { background: #22c55e; }
-
-/* Card 4 — Yearly Projection — dark green */
-.kpi-teal {
-  background: #16a34a;
-  color: #fff;
-}
-.kpi-teal .kpi-label         { color: rgba(255,255,255,0.6); }
-.kpi-teal .kpi-val-teal      { color: #fff; }
-.kpi-teal .kpi-icon-teal     { background: rgba(0,0,0,0.15); color: #fff; }
-.kpi-teal .kpi-badge.up      { background: rgba(255,255,255,0.15); color: #fff; }
-.kpi-teal::before            { background: rgba(255,255,255,0.3); }
 
 /* =====================================================
    DASH SUB-CARDS — Dark / Green Bold Style
@@ -1599,13 +1626,9 @@ body.dark .step-bar    { background: #334155; }
 .dash-chart-card:nth-of-type(2) .payment-status.pending { background: rgba(245,158,11,0.2); color: #fbbf24; }
 
 /* =====================================================
-   DARK MODE OVERRIDES for new card styles
+   DARK MODE OVERRIDES for sub-card styles
 ===================================================== */
 
-body.dark .kpi-blue  { background: #0f172a; }
-body.dark .kpi-dark  { background: #22c55e; }
-body.dark .kpi-green { background: #111827; }
-body.dark .kpi-teal  { background: #16a34a; }
 body.dark .dash-card:nth-child(1) { background: #0f172a; }
 body.dark .dash-card:nth-child(2) { background: #22c55e; }
 body.dark .dash-card:nth-child(3) { background: #14532d; }

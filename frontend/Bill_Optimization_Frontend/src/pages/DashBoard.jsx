@@ -10,7 +10,7 @@ import UsageInsights    from "./UsageInsights";
 import DownloadReport   from "./DownloadReport";
 import SavingsTracker   from "./SavingsTracker";
 import ChartsSection    from "./ChartsSection";
-import BillHistoryTable from "./BillHistoryTable";
+
 
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip
@@ -237,10 +237,6 @@ const Dashboard = () => {
     : calculateGenericBreakdown(unitsBilled, netAmount);
   const isRealData = !!profile?.appliances;
 
-  const statusIcon =
-    data.paymentStatus === "Paid"    ? <CheckIcon/> :
-    data.paymentStatus === "Overdue" ? <XIcon/>     : <ClockIcon/>;
-
   const formattedTime = generatedAt
     ? new Date(generatedAt).toLocaleTimeString("en-IN",{ hour:"2-digit", minute:"2-digit" })
     : null;
@@ -281,24 +277,31 @@ const Dashboard = () => {
 
       {/* KPI Row */}
       <div className="kpi-row">
+        {/* Card 1 — Units Consumed (dark navy) */}
         <div className="kpi-card kpi-blue">
           <div className="kpi-icon-box kpi-icon-blue"><Bolt/></div>
           <div className="kpi-label">Units Consumed</div>
           <div className="kpi-value kpi-val-blue">{unitsBilled} <span className="kpi-unit">kWh</span></div>
           <span className="kpi-badge neutral">&#8377;{costPerUnit}/unit</span>
         </div>
+
+        {/* Card 2 — Total Bill (white) */}
         <div className="kpi-card kpi-dark">
           <div className="kpi-icon-box kpi-icon-dark"><CardIcon/></div>
           <div className="kpi-label">Total Bill</div>
           <div className="kpi-value kpi-val-dark">&#8377;{netAmount.toLocaleString("en-IN")}</div>
           <span className="kpi-badge warn">Gross &#8377;{grossAmount.toLocaleString("en-IN")}</span>
         </div>
-        <div className="kpi-card kpi-green">
-          <div className="kpi-icon-box kpi-icon-green"><Rupee/></div>
+
+        {/* Card 3 — Rebate Savings (NOW DARK / BLACK) */}
+        <div className="kpi-card kpi-blue">
+          <div className="kpi-icon-box kpi-icon-blue"><Rupee/></div>
           <div className="kpi-label">Rebate Savings</div>
-          <div className="kpi-value kpi-val-green">&#8377;{saved.toLocaleString("en-IN")}</div>
+          <div className="kpi-value kpi-val-blue">&#8377;{saved.toLocaleString("en-IN")}</div>
           <span className="kpi-badge up">+{percent}% saved</span>
         </div>
+
+        {/* Card 4 — Yearly Projection (white) */}
         <div className="kpi-card kpi-teal">
           <div className="kpi-icon-box kpi-icon-teal"><TrendUp/></div>
           <div className="kpi-label">Yearly Projection</div>
@@ -486,50 +489,12 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Payment Info */}
-      <div className="dash-chart-card">
-        <h3 className="card-section-title">
-          <span className="title-icon-wrap green-icon"><CardIcon/></span>
-          Payment Info
-        </h3>
-        <div className="payment-grid">
-          <div className="payment-item">
-            <span className="payment-label">Status</span>
-            <span className={`payment-status ${data.paymentStatus?.toLowerCase()}`}>
-              {statusIcon}{data.paymentStatus}
-            </span>
-          </div>
-          {data.paymentMode && (
-            <div className="payment-item">
-              <span className="payment-label">Mode</span>
-              <span className="payment-value">{data.paymentMode}</span>
-            </div>
-          )}
-          {data.lastPaymentDate && (
-            <div className="payment-item">
-              <span className="payment-label">Last Paid</span>
-              <span className="payment-value">
-                {new Date(data.lastPaymentDate).toLocaleDateString("en-IN")}
-              </span>
-            </div>
-          )}
-          {data.securityDeposit > 0 && (
-            <div className="payment-item">
-              <span className="payment-label">Security Deposit</span>
-              <span className="payment-value">&#8377;{data.securityDeposit}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Charts */}
       <ChartsSection bills={bills}/>
 
       {/* Savings Tracker */}
       <SavingsTracker bills={bills}/>
 
-      {/* Bill History Table */}
-      <BillHistoryTable bills={bills}/>
 
     </div>
   );

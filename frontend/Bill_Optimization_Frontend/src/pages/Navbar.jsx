@@ -7,21 +7,21 @@ import { useLanguage } from "../context/LanguageContext";
 import { useTranslation } from "react-i18next";
 
 const HistoryIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="1 4 1 10 7 10"/>
     <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
   </svg>
 );
 const HomeIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
     <polyline points="9 22 9 12 15 12 15 22"/>
   </svg>
 );
 const UploadIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
     <polyline points="17 8 12 3 7 8"/>
@@ -29,7 +29,7 @@ const UploadIcon = () => (
   </svg>
 );
 const DashboardIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7"/>
     <rect x="14" y="3" width="7" height="7"/>
@@ -45,13 +45,13 @@ const CloseIcon = () => (
   </svg>
 );
 const ChevronDownIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 const GlobeIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
     <line x1="2" y1="12" x2="22" y2="12"/>
@@ -150,7 +150,7 @@ const Navbar = ({ onHistoryOpen }) => {
         {token && (
           <div style={{ padding: "0 10px 16px" }}>
             <button className="ap-logout" onClick={() => { handleLogout(); setMenuOpen(false); }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -169,9 +169,9 @@ const Navbar = ({ onHistoryOpen }) => {
             <span/><span/><span/>
           </button>
 
-          <span className="nb-logo" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
+          <span className="nb-logo" style={{ cursor: "pointer", fontSize: "22px" }} onClick={() => navigate("/")}>
             <span className="nb-logo-bolt">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="#f97316">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="#f97316">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
             </span>
@@ -182,17 +182,7 @@ const Navbar = ({ onHistoryOpen }) => {
 
         <div className="nav-right">
 
-          {/* History icon button */}
-          {onHistoryOpen && (
-            <button
-              className="nav-icon-btn"
-              onClick={onHistoryOpen}
-              title="Bill History"
-              aria-label="Bill History"
-            >
-              <HistoryIcon/>
-            </button>
-          )}
+
 
           {/* Language dropdown */}
           <div className="nb-lang-wrap" ref={langRef}>
@@ -225,7 +215,7 @@ const Navbar = ({ onHistoryOpen }) => {
             aria-label="Toggle dark mode"
           >
             {darkMode ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="5"/>
                 <line x1="12" y1="1"  x2="12" y2="3"/>
@@ -238,7 +228,7 @@ const Navbar = ({ onHistoryOpen }) => {
                 <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
               </svg>
             ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
               </svg>
@@ -253,14 +243,14 @@ const Navbar = ({ onHistoryOpen }) => {
             aria-label={token ? "Logout" : "Login"}
           >
             {token ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                 <polyline points="10 17 15 12 10 7"/>

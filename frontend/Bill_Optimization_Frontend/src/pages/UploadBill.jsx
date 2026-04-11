@@ -5,7 +5,7 @@ import { getApplianceProfile } from "../Reducer/ApplianceSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const UTILITY_BOARDS = ["MSEDCL", "BESCOM", "TPDDL", "KSEB", "CESC"];
+const UTILITY_BOARDS = ["CESC"];
 const API_BASE = "http://localhost:5000/api";
 
 // ─── Helper: always get token from correct storage ───────────
@@ -449,7 +449,7 @@ const UploadBill = () => {
       {/* Footer */}
       <footer className="eb-footer">
         <div className="eb-footer-logo">ENERGYBILL</div>
-        <div className="eb-footer-copy">© 2024 ENERGYBILL. PRECISION EDITORIAL ANALYSIS.</div>
+        <div className="eb-footer-copy">© 2026 ENERGYBILL. PRECISION EDITORIAL ANALYSIS.</div>
         <div className="eb-footer-links">
           <span>PRIVACY POLICY</span>
           <span>TERMS</span>
