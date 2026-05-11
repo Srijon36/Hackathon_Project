@@ -37,7 +37,8 @@ const applianceRoutes      = require("./routes/applianceRoute/applianceRoute");
 const predictionRoute      = require("./routes/predictRoute/predictRoute");
 const adminRoute           = require("./routes/adminRoute/adminRoute");
 const paymentRoute         = require("./routes/paymentRoute/paymentRoute");
-const subscriptionRoute    = require("./routes/subscriptionRoute/subscriptionRoute"); // ← ADD THIS
+const subscriptionRoute    = require("./routes/subscriptionRoute/subscriptionRoute");
+const recommendationRoute  = require("./routes/recommendationRoute/recommendationRoute");
 
 // 🔹 Use Routes
 app.use("/api/bills",           billRoutes);
@@ -51,6 +52,7 @@ app.use("/api/predict",         predictionRoute);
 app.use("/api/admin",           adminRoute);
 app.use("/api/payment",         paymentRoute);
 app.use("/api/subscription",    subscriptionRoute);  // ← ADD THIS
+app.use("/api/recommendations", recommendationRoute);
 
 // 🔹 Health Check
 app.get("/", (req, res) => {

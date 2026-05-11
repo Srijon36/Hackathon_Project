@@ -19,6 +19,7 @@ const applianceSchema = new mongoose.Schema({
       quantity:    { type: Number,  default: 1     },
       hoursPerDay: { type: Number,  default: 4     },
       wattage:     { type: Number,  required: true },
+      starRating:  { type: Number,  default: null  },
     },
   ],
   updatedAt: { type: Date, default: Date.now },

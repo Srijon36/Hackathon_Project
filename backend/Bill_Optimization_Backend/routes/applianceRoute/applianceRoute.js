@@ -1,13 +1,20 @@
 const express = require("express");
 const router = express.Router();
 
-const { saveApplianceProfile, getApplianceProfile } = require("../../controllers/applianceController/applianceController");
+const {
+  saveApplianceProfile,
+  getApplianceProfile,
+  addAppliance,
+  deleteAppliance,
+  updateAppliance,
+} = require("../../controllers/applianceController/applianceController");
+
 const { protect } = require("../../middlewares/authMiddleware/authMiddleware");
 
-// POST /api/appliances/save
-router.post("/save", protect, saveApplianceProfile);
-
-// GET  /api/appliances/profile
-router.get("/profile", protect, getApplianceProfile); // ✅ renamed from /get → /profile
+router.post("/save",                        protect, saveApplianceProfile);
+router.get("/profile",                      protect, getApplianceProfile);
+router.post("/add",                         protect, addAppliance);
+router.delete("/:applianceId",              protect, deleteAppliance);
+router.patch("/:applianceId",               protect, updateAppliance);
 
 module.exports = router;
