@@ -3,6 +3,12 @@ import { useDispatch } from "react-redux";
 import { saveApplianceProfile } from "../Reducer/ApplianceSlice";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = "http://localhost:5000/api";
+const getToken = () => {
+  const s = sessionStorage.getItem("energy_token");
+  return s ? JSON.parse(s)?.token : null;
+};
+
 // ── Domestic appliances ────────────────────────────────────────────────────
 const DOMESTIC_CATEGORIES = [
   {
@@ -345,6 +351,12 @@ export default function Appliances() {
   const [saving,         setSaving]         = useState(false);
   const [saved,          setSaved]          = useState(false);
 
+  // AI monthly prediction state
+  const [predicting,    setPredicting]    = useState(false);
+  const [prediction,    setPrediction]    = useState(null);
+  const [predictError,  setPredictError]  = useState(null);
+  const [showForecast,  setShowForecast]  = useState(false);
+
   const currentCategories = CATEGORIES_MAP[consumerType];
 
   // Switch type → clear selections, jump to first category of new type
@@ -399,7 +411,31 @@ export default function Appliances() {
     await dispatch(saveApplianceProfile({ consumerType, appliances }));
     setSaving(false);
     setSaved(true);
+    setPrediction(null); // reset forecast on re-save
     setTimeout(() => navigate("/dashboard"), 1200);
+  };
+
+  const handlePredictMonthly = async () => {
+    setPredicting(true);
+    setPredictError(null);
+    setPrediction(null);
+    setShowForecast(true);
+    try {
+      const res  = await fetch(`${API_BASE}/appliances/predict-monthly`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPrediction(data);
+      } else {
+        setPredictError(data.message || "Prediction failed.");
+      }
+    } catch {
+      setPredictError("Network error. Is the backend running?");
+    } finally {
+      setPredicting(false);
+    }
   };
 
   // Resolve active category (guard after type switch)
@@ -673,18 +709,8 @@ export default function Appliances() {
                           <button onClick={() => updateField(a.name, "quantity", a.quantity + 1)} style={miniBtn}>+</button>
                         </div>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: "9px", fontWeight: 700,
-                          color: C.textMuted, display: "block", marginBottom: "4px",
-                          textTransform: "uppercase", letterSpacing: "0.8px" }}>Hrs/Day</label>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <button onClick={() => updateField(a.name, "hoursPerDay", a.hoursPerDay - 1)} style={miniBtn}>−</button>
-                          <span style={{ fontSize: "12px", fontWeight: 700, color: C.text,
-                            minWidth: "18px", textAlign: "center" }}>{a.hoursPerDay}</span>
-                          <button onClick={() => updateField(a.name, "hoursPerDay", a.hoursPerDay + 1)} style={miniBtn}>+</button>
-                        </div>
-                      </div>
                     </div>
+
 
                     <div style={{
                       marginTop: "7px", fontSize: "10px", fontWeight: 700,
@@ -761,6 +787,305 @@ export default function Appliances() {
           </div>
         </div>
       </div>
+
+      {/* ── AI Monthly Forecast Panel ── */}
+      {saved && (
+        <div style={{ padding: "0 28px 48px" }}>
+          <div style={{
+            background: "#fff",
+            border: `1px solid ${C.border}`,
+            borderRadius: "18px",
+            padding: "28px 32px",
+            boxShadow: C.shadow,
+          }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px", marginBottom: "20px" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: C.text, letterSpacing: "-0.3px" }}>
+                  🤖 AI Monthly Appliance Forecast
+                </h2>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: C.textMuted }}>
+                  Claude AI predicts which appliances you'll actually use each month based on Indian seasonal patterns
+                </p>
+              </div>
+              <button
+                onClick={handlePredictMonthly}
+                disabled={predicting}
+                style={{
+                  padding: "11px 24px",
+                  background: predicting ? C.surfaceAlt : "linear-gradient(135deg, #22c55e, #16a34a)",
+                  border: "none", borderRadius: "10px",
+                  color: predicting ? C.textMuted : "#fff",
+                  fontFamily: "inherit", fontWeight: 700, fontSize: "14px",
+                  cursor: predicting ? "not-allowed" : "pointer",
+                  boxShadow: predicting ? "none" : "0 3px 14px rgba(22,163,74,0.35)",
+                  display: "flex", alignItems: "center", gap: "8px",
+                  transition: "all 0.2s",
+                }}
+              >
+                {predicting ? "⏳ Analysing…" : `✨ ${prediction ? "Refresh Forecast" : "Generate Forecast"}`}
+              </button>
+            </div>
+
+            {/* Error */}
+            {predictError && (
+              <div style={{
+                background: "#fff0f0", border: "1px solid #fecaca",
+                borderRadius: "10px", padding: "12px 16px",
+                color: "#b91c1c", fontSize: "13px", fontWeight: 600,
+              }}>
+                ❌ {predictError}
+              </div>
+            )}
+
+            {/* Loading skeleton */}
+            {predicting && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} style={{
+                    height: "48px", borderRadius: "10px",
+                    background: "linear-gradient(90deg, #f0f2f8 25%, #e8eaf0 50%, #f0f2f8 75%)",
+                    backgroundSize: "400% 100%",
+                    animation: "shimmerAnim 1.4s ease infinite",
+                  }} />
+                ))}
+                <style>{`@keyframes shimmerAnim { 0%{background-position:100% 50%} 100%{background-position:0% 50%} }`}</style>
+              </div>
+            )}
+
+            {/* Heatmap result */}
+            {prediction && !predicting && (
+              <>
+                {/* Claude insight + rate badge */}
+                <div style={{
+                  background: "linear-gradient(135deg, #f0fdf4, #dcfce7)",
+                  border: "1px solid #86efac", borderRadius: "12px",
+                  padding: "14px 18px", marginBottom: "8px",
+                  fontSize: "13px", color: C.accentText, lineHeight: 1.65, fontWeight: 500,
+                }}>
+                  💡 {prediction.summaryInsight}
+                </div>
+
+                {/* Rate info bar */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  marginBottom: "18px", flexWrap: "wrap",
+                }}>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                    background: "#fef3c7", border: "1px solid #fde68a",
+                    borderRadius: "99px", padding: "4px 12px",
+                    fontSize: "11px", fontWeight: 700, color: "#92400e",
+                  }}>
+                    ⚡ Rate: ₹{prediction.ratePerUnit}/kWh ({prediction.consumerType})
+                  </span>
+                  <span style={{ fontSize: "11px", color: C.textMuted }}>
+                    Hover over any cell for exact kWh details
+                  </span>
+                </div>
+
+                {/* Table */}
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "3px", minWidth: "880px" }}>
+                    <thead>
+                      <tr>
+                        <th style={{
+                          textAlign: "left", fontSize: "11px", fontWeight: 700, color: C.textMuted,
+                          paddingBottom: "8px", paddingLeft: "4px", width: "175px",
+                        }}>Appliance</th>
+                        {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(m => (
+                          <th key={m} style={{
+                            textAlign: "center", fontSize: "10px", fontWeight: 700,
+                            color: C.textMuted, paddingBottom: "8px", minWidth: "52px",
+                          }}>{m}</th>
+                        ))}
+                        <th style={{
+                          textAlign: "center", fontSize: "10px", fontWeight: 700,
+                          color: "#92400e", paddingBottom: "8px", minWidth: "70px",
+                          background: "#fffbeb", borderRadius: "8px",
+                        }}>Annual</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {prediction.predictions.map((p) => {
+                        const maxCost = Math.max(...p.months.map(m => m.costPerMonth), 1);
+                        return (
+                          <tr key={p.appliance}>
+                            {/* Appliance name */}
+                            <td style={{
+                              fontSize: "12px", fontWeight: 600, color: C.text,
+                              paddingRight: "8px", paddingBottom: "4px", whiteSpace: "nowrap",
+                              verticalAlign: "middle",
+                            }}>
+                              {p.icon} {p.appliance}
+                              <div style={{ fontSize: "10px", color: C.textMuted, fontWeight: 400 }}>
+                                {p.wattage}W × {p.quantity}
+                              </div>
+                            </td>
+
+                            {/* Monthly cells */}
+                            {p.months.map((m) => {
+                              const pct = m.costPerMonth / maxCost;
+                              const bg = m.hoursPerDay === 0 ? "#f1f5f9"
+                                : pct >= 0.8 ? "#16a34a"
+                                : pct >= 0.5 ? "#4ade80"
+                                : pct >= 0.2 ? "#bbf7d0"
+                                : "#dcfce7";
+                              const fg = pct >= 0.8 ? "#fff" : C.accentText;
+                              const fgMuted = pct >= 0.8 ? "rgba(255,255,255,0.75)" : "#6b9e7a";
+                              return (
+                                <td key={m.month}
+                                  title={`${p.appliance} — ${m.month}\nUsage: ${m.hoursPerDay} hrs/day\nkWh: ${m.kwhPerMonth} kWh\nCost: ₹${m.costPerMonth}`}
+                                  style={{ textAlign: "center", paddingBottom: "4px", verticalAlign: "top" }}>
+                                  <div style={{
+                                    background: bg, borderRadius: "7px",
+                                    padding: "5px 3px 4px",
+                                    minWidth: "48px", cursor: "default",
+                                    transition: "transform 0.1s",
+                                  }}>
+                                    {m.hoursPerDay === 0 ? (
+                                      <div style={{ fontSize: "13px", color: "#cbd5e1", lineHeight: 2 }}>—</div>
+                                    ) : (
+                                      <>
+                                        {/* Hours */}
+                                        <div style={{
+                                          fontSize: "11px", fontWeight: 800, color: fg,
+                                          lineHeight: 1.2,
+                                        }}>
+                                          {m.hoursPerDay}h
+                                        </div>
+                                        {/* Cost */}
+                                        <div style={{
+                                          fontSize: "10px", fontWeight: 600, color: fgMuted,
+                                          lineHeight: 1.3, marginTop: "2px",
+                                        }}>
+                                          ₹{m.costPerMonth}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </td>
+                              );
+                            })}
+
+                            {/* Annual total cell */}
+                            <td style={{ textAlign: "center", paddingBottom: "4px", verticalAlign: "top" }}>
+                              <div style={{
+                                background: "#fffbeb", border: "1px solid #fde68a",
+                                borderRadius: "7px", padding: "5px 3px 4px",
+                                minWidth: "64px",
+                              }}>
+                                <div style={{ fontSize: "11px", fontWeight: 800, color: "#92400e", lineHeight: 1.2 }}>
+                                  {p.annualKwh} kWh
+                                </div>
+                                <div style={{ fontSize: "11px", fontWeight: 700, color: "#d97706", lineHeight: 1.3, marginTop: "2px" }}>
+                                  ₹{p.annualCost.toLocaleString("en-IN")}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {/* Monthly totals row */}
+                      <tr style={{ borderTop: `2px solid ${C.border}` }}>
+                        <td style={{
+                          fontSize: "11px", fontWeight: 800, color: C.text,
+                          paddingTop: "8px", paddingRight: "8px", whiteSpace: "nowrap",
+                        }}>
+                          📊 Total / Month
+                          <div style={{ fontSize: "10px", color: C.textMuted, fontWeight: 400 }}>All appliances</div>
+                        </td>
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const monthTotal = prediction.predictions.reduce(
+                            (sum, p) => sum + (p.months[i]?.costPerMonth ?? 0), 0
+                          );
+                          const monthKwh = prediction.predictions.reduce(
+                            (sum, p) => sum + (p.months[i]?.kwhPerMonth ?? 0), 0
+                          );
+                          const maxTotal = Math.max(
+                            ...Array.from({ length: 12 }, (_, j) =>
+                              prediction.predictions.reduce((s, p) => s + (p.months[j]?.costPerMonth ?? 0), 0)
+                            ), 1
+                          );
+                          const pct = monthTotal / maxTotal;
+                          return (
+                            <td key={i}
+                              title={`Month total: ${monthKwh.toFixed(1)} kWh · ₹${monthTotal}`}
+                              style={{ textAlign: "center", paddingTop: "8px", verticalAlign: "top" }}>
+                              <div style={{
+                                background: pct >= 0.8 ? "#0f172a" : pct >= 0.5 ? "#1e293b" : "#334155",
+                                borderRadius: "7px", padding: "5px 3px 4px",
+                                minWidth: "48px",
+                              }}>
+                                <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", lineHeight: 1.2 }}>
+                                  {parseFloat(monthKwh.toFixed(0))} kWh
+                                </div>
+                                <div style={{ fontSize: "11px", fontWeight: 800, color: "#22c55e", lineHeight: 1.3, marginTop: "1px" }}>
+                                  ₹{monthTotal.toLocaleString("en-IN")}
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        })}
+                        {/* Grand annual total */}
+                        <td style={{ textAlign: "center", paddingTop: "8px", verticalAlign: "top" }}>
+                          <div style={{
+                            background: "#0f172a", border: "2px solid #22c55e",
+                            borderRadius: "7px", padding: "5px 3px 4px",
+                            minWidth: "64px",
+                          }}>
+                            <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", lineHeight: 1.2 }}>
+                              {prediction.predictions.reduce((s, p) => s + p.annualKwh, 0).toFixed(0)} kWh
+                            </div>
+                            <div style={{ fontSize: "12px", fontWeight: 800, color: "#22c55e", lineHeight: 1.3, marginTop: "1px" }}>
+                              ₹{prediction.predictions.reduce((s, p) => s + p.annualCost, 0).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Legend */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "11px", color: C.textMuted, fontWeight: 600 }}>Cost intensity:</span>
+                  {[
+                    { bg: "#f1f5f9", label: "Off" },
+                    { bg: "#dcfce7", label: "Low" },
+                    { bg: "#bbf7d0", label: "Moderate" },
+                    { bg: "#4ade80", label: "High" },
+                    { bg: "#16a34a", label: "Peak" },
+                  ].map(({ bg, label }) => (
+                    <div key={label} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      <div style={{ width: "16px", height: "16px", background: bg, borderRadius: "4px", border: "1px solid #e2e8f0" }} />
+                      <span style={{ fontSize: "11px", color: C.textSub }}>{label}</span>
+                    </div>
+                  ))}
+                  <span style={{ fontSize: "10px", color: C.textMuted, marginLeft: "auto" }}>
+                    Generated {new Date(prediction.generatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </>
+            )}
+
+
+            {/* Prompt state */}
+            {!prediction && !predicting && !predictError && (
+              <div style={{ textAlign: "center", padding: "40px 20px", color: C.textMuted }}>
+                <div style={{ fontSize: "48px", marginBottom: "12px" }}>🗓️</div>
+                <div style={{ fontWeight: 600, fontSize: "15px", marginBottom: "6px" }}>
+                  Click "Generate Forecast" above
+                </div>
+                <div style={{ fontSize: "13px" }}>
+                  Claude AI will predict your appliance usage pattern across all 12 months
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+}
