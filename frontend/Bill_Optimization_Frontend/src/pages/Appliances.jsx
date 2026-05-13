@@ -43,16 +43,66 @@ const CONSUMER_TYPES = [
   { key: "industrial", label: "Industrial", icon: "🏭", desc: "Factory / Manufacturing" },
 ];
 
+// ── Smart Suggestions Alternatives ──────
+const ALTERNATIVES = {
+  "Air Conditioner": {
+    alternative: "Stand Fan",
+    altWattage: 50,
+    altIcon: "🌀",
+    tip: "A stand fan uses ~97% less energy than an AC. Great for mild weather days.",
+  },
+  "Water Heater": {
+    alternative: "Solar Geyser",
+    altWattage: 0,
+    altIcon: "☀️",
+    tip: "A solar geyser can eliminate this electricity cost entirely using sunlight.",
+  },
+  "Television": {
+    alternative: "Smaller LED TV",
+    altWattage: 50,
+    altIcon: "📺",
+    tip: "A smaller LED TV (32\") uses up to 50% less power than a large screen.",
+  },
+  "Washing Machine": {
+    alternative: "Hand Wash (light clothes)",
+    altWattage: 0,
+    altIcon: "🤲",
+    tip: "Hand washing light clothes saves the full machine energy for those loads.",
+  },
+  "Microwave": {
+    alternative: "Gas Stove",
+    altWattage: 0,
+    altIcon: "🔥",
+    tip: "Using a gas stove for reheating saves electricity on frequent small tasks.",
+  },
+  "Computers": {
+    alternative: "Laptop",
+    altWattage: 50,
+    altIcon: "💻",
+    tip: "Laptops use up to 75% less power than desktop computers.",
+  },
+  "HVAC System": {
+    alternative: "Ceiling Fans + Ventilation",
+    altWattage: 300,
+    altIcon: "🌀",
+    tip: "Ceiling fans with natural ventilation can reduce HVAC load significantly.",
+  },
+  "Electric Motors": {
+    alternative: "Energy-Efficient IE3 Motors",
+    altWattage: 4000,
+    altIcon: "⚙️",
+    tip: "IE3 rated motors are up to 20% more efficient than standard motors.",
+  },
+};
+
 const ApplianceForm = () => {
   const dispatch  = useDispatch();
   const navigate  = useNavigate();
   const { loading, error, saved, profile } = useSelector((s) => s.appliance);
 
   const [consumerType, setConsumerType] = useState("domestic");
-  const [appliances,   setAppliances]   = useState(
-    APPLIANCE_TEMPLATES["domestic"]
-  );
-  const [successMsg, setSuccessMsg] = useState("");
+  const [appliances,   setAppliances]   = useState(APPLIANCE_TEMPLATES["domestic"]);
+  const [successMsg,   setSuccessMsg]   = useState("");
 
   // Load existing profile if any
   useEffect(() => {
@@ -82,6 +132,31 @@ const ApplianceForm = () => {
     );
   };
 
+  // ── Generate Smart Suggestions ──────
+  const generateSuggestions = () => {
+    const rate = 8; // ₹ per kWh (CESC average)
+    return appliances
+      .filter((a) => ALTERNATIVES[a.name] && a.hoursPerDay > 1)
+      .map((a) => {
+        const alt = ALTERNATIVES[a.name];
+        const currentKwh = (a.wattage * a.quantity * a.hoursPerDay * 30) / 1000;
+        const altKwh     = (alt.altWattage * a.quantity * a.hoursPerDay * 30) / 1000;
+        const savings    = ((currentKwh - altKwh) * rate).toFixed(0);
+        return {
+          appliance:   a.name,
+          icon:        a.icon,
+          altIcon:     alt.altIcon,
+          alternative: alt.alternative,
+          tip:         alt.tip,
+          savings,
+          currentKwh:  currentKwh.toFixed(1),
+          altKwh:      altKwh.toFixed(1),
+        };
+      })
+      .filter((s) => parseInt(s.savings) > 0)
+      .sort((a, b) => parseInt(b.savings) - parseInt(a.savings)); // highest savings first
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await dispatch(
@@ -92,6 +167,9 @@ const ApplianceForm = () => {
       setTimeout(() => navigate("/upload"), 1500);
     }
   };
+
+  const suggestions = generateSuggestions();
+  const totalSavings = suggestions.reduce((sum, s) => sum + parseInt(s.savings), 0);
 
   return (
     <div className="dash-page" style={{ maxWidth: "860px" }}>
@@ -289,6 +367,98 @@ const ApplianceForm = () => {
             </span>
           </div>
         </div>
+
+        {/* ── Smart Saving Suggestions ── */}
+        {suggestions.length > 0 && (
+          <div className="chart-card" style={{ marginTop: "24px" }}>
+
+            {/* Section Header */}
+            <div style={{
+              display: "flex", justifyContent: "space-between",
+              alignItems: "center", marginBottom: "16px",
+              paddingBottom: "14px", borderBottom: "1px solid #e2ede6",
+            }}>
+              <h3 style={{
+                fontSize: "11px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: ".1em", color: "#6b8876", margin: 0,
+              }}>
+                💡 Smart Saving Suggestions
+              </h3>
+              {/* Total potential savings badge */}
+              <div style={{
+                background: "#dcfce7", color: "#15803d",
+                padding: "6px 14px", borderRadius: "20px",
+                fontSize: "13px", fontWeight: 800,
+                border: "1px solid #86efac",
+              }}>
+                💰 Save up to ₹{totalSavings}/month
+              </div>
+            </div>
+
+            {/* Suggestion Cards */}
+            {suggestions.map((s, i) => (
+              <div key={i} style={{
+                display: "flex", alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px", marginBottom: "10px",
+                background: "#fffbeb", borderRadius: "12px",
+                border: "1px solid #fcd34d",
+                gap: "12px",
+              }}>
+                {/* Left: Icons + Text */}
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1 }}>
+                  {/* Appliance swap icons */}
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    background: "#fff", padding: "8px 12px",
+                    borderRadius: "10px", border: "1px solid #fde68a",
+                    flexShrink: 0,
+                  }}>
+                    <span style={{ fontSize: "22px" }}>{s.icon}</span>
+                    <span style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 700 }}>→</span>
+                    <span style={{ fontSize: "22px" }}>{s.altIcon}</span>
+                  </div>
+
+                  {/* Text */}
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                      Instead of <span style={{ color: "#dc2626" }}>{s.appliance}</span>, try{" "}
+                      <span style={{ color: "#16a34a" }}>{s.alternative}</span>
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                      {s.tip}
+                    </div>
+                    <div style={{
+                      fontSize: "11px", color: "#94a3b8",
+                      marginTop: "6px", fontWeight: 600,
+                    }}>
+                      {s.currentKwh} kWh/mo → {s.altKwh} kWh/mo
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Savings badge */}
+                <div style={{
+                  background: "#22c55e", color: "#fff",
+                  padding: "10px 16px", borderRadius: "10px",
+                  fontWeight: 800, fontSize: "15px",
+                  whiteSpace: "nowrap", flexShrink: 0,
+                  textAlign: "center",
+                }}>
+                  Save<br />₹{s.savings}/mo
+                </div>
+              </div>
+            ))}
+
+            {/* Bottom note */}
+            <p style={{
+              fontSize: "11px", color: "#94a3b8",
+              marginTop: "12px", textAlign: "center",
+            }}>
+              * Savings calculated at ₹8/kWh (CESC average rate). Actual savings may vary.
+            </p>
+          </div>
+        )}
 
         {/* ── Submit ── */}
         <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
