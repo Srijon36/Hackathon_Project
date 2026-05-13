@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../Reducer/AuthSlice";
 
-const API = "http://localhost:5000/api/admin";
+const API       = "http://localhost:5000/api/admin";
+const NOTIF_API = "http://localhost:5000/api/notifications";
 
 const getHeaders = () => {
   const stored = sessionStorage.getItem("energy_token");
@@ -196,10 +197,40 @@ export default function AdminPanel() {
     ? ((stats.subscribedUsers / (stats.totalUsers || 1)) * 100).toFixed(1)
     : "0.0";
 
+  /* ── Notification state ────────────────────────────── */
+  const [notifLoading, setNotifLoading] = useState({});
+  const [customType,   setCustomType]   = useState("due");
+  const [customEmail,  setCustomEmail]  = useState("");
+  const [billConfirmId, setBillConfirmId] = useState("");
+  const [welcomeUserId, setWelcomeUserId] = useState("");
+
+  const notifAction = async (endpoint, body = {}) => {
+    setNotifLoading((p) => ({ ...p, [endpoint]: true }));
+    try {
+      const res  = await fetch(`${NOTIF_API}/${endpoint}`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const sent = data.summary?.sent ?? "";
+        showToast(sent !== "" ? `Sent ${sent} email(s) successfully` : data.message);
+      } else {
+        showToast(data.message || "Action failed", "error");
+      }
+    } catch {
+      showToast("Network error", "error");
+    } finally {
+      setNotifLoading((p) => ({ ...p, [endpoint]: false }));
+    }
+  };
+
   const navItems = [
-    { id: "overview",    label: "Overview",    icon: <IconGrid /> },
-    { id: "users",       label: "All Users",   icon: <IconUsers /> },
-    { id: "subscribers", label: "Subscribers", icon: <IconStar /> },
+    { id: "overview",      label: "Overview",      icon: <IconGrid /> },
+    { id: "users",         label: "All Users",     icon: <IconUsers /> },
+    { id: "subscribers",   label: "Subscribers",   icon: <IconStar /> },
+    { id: "notifications", label: "Notifications", icon: <IconBell /> },
   ];
 
   return (
@@ -516,6 +547,156 @@ export default function AdminPanel() {
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ── NOTIFICATIONS ── */}
+        {activePage === "notifications" && (
+          <div className="ap-page">
+            <h1 className="ap-page-title">Notifications</h1>
+            <p className="ap-page-sub">Manually trigger email notifications to users</p>
+
+            <div className="ap-notif-grid">
+
+              {/* Bulk — Due Reminders */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent" />
+                  Bill Due Reminders
+                </div>
+                <p className="ap-notif-desc">
+                  Sends a reminder email to every user whose bill is still pending and has an upcoming due date.
+                </p>
+                <button
+                  className="ap-notif-btn ap-notif-btn--yellow"
+                  disabled={notifLoading["send-due-reminders"]}
+                  onClick={() => notifAction("send-due-reminders")}
+                >
+                  {notifLoading["send-due-reminders"] ? "Sending…" : "Send Due Reminders"}
+                </button>
+              </div>
+
+              {/* Bulk — Overdue Alerts */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent ap-section-accent--red" />
+                  Overdue Alerts
+                </div>
+                <p className="ap-notif-desc">
+                  Alerts every user whose bill is past the due date and still unpaid.
+                </p>
+                <button
+                  className="ap-notif-btn ap-notif-btn--red"
+                  disabled={notifLoading["send-overdue-alerts"]}
+                  onClick={() => notifAction("send-overdue-alerts")}
+                >
+                  {notifLoading["send-overdue-alerts"] ? "Sending…" : "Send Overdue Alerts"}
+                </button>
+              </div>
+
+              {/* Bulk — Subscription Warnings */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent ap-section-accent--blue" />
+                  Subscription Expiry Warnings
+                </div>
+                <p className="ap-notif-desc">
+                  Warns subscribed users whose plans are about to expire.
+                </p>
+                <button
+                  className="ap-notif-btn ap-notif-btn--blue"
+                  disabled={notifLoading["send-subscription-warnings"]}
+                  onClick={() => notifAction("send-subscription-warnings")}
+                >
+                  {notifLoading["send-subscription-warnings"] ? "Sending…" : "Send Subscription Warnings"}
+                </button>
+              </div>
+
+              {/* Targeted — Bill Confirmation */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent ap-section-accent--green" />
+                  Bill Upload Confirmation
+                </div>
+                <p className="ap-notif-desc">
+                  Sends a confirmation email for a specific bill by its ID.
+                </p>
+                <input
+                  className="ap-notif-input"
+                  placeholder="Enter Bill ID"
+                  value={billConfirmId}
+                  onChange={(e) => setBillConfirmId(e.target.value)}
+                />
+                <button
+                  className="ap-notif-btn ap-notif-btn--green"
+                  disabled={notifLoading["send-bill-confirmation"] || !billConfirmId.trim()}
+                  onClick={() => notifAction("send-bill-confirmation", { billId: billConfirmId.trim() })}
+                >
+                  {notifLoading["send-bill-confirmation"] ? "Sending…" : "Send Confirmation"}
+                </button>
+              </div>
+
+              {/* Targeted — Welcome Email */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent" />
+                  Welcome Email
+                </div>
+                <p className="ap-notif-desc">
+                  Sends a welcome email to a specific user by their User ID.
+                </p>
+                <input
+                  className="ap-notif-input"
+                  placeholder="Enter User ID"
+                  value={welcomeUserId}
+                  onChange={(e) => setWelcomeUserId(e.target.value)}
+                />
+                <button
+                  className="ap-notif-btn ap-notif-btn--blue"
+                  disabled={notifLoading["send-welcome"] || !welcomeUserId.trim()}
+                  onClick={() => notifAction("send-welcome", { userId: welcomeUserId.trim() })}
+                >
+                  {notifLoading["send-welcome"] ? "Sending…" : "Send Welcome"}
+                </button>
+              </div>
+
+              {/* Custom — Flexible Sender */}
+              <div className="ap-section-card">
+                <div className="ap-section-title">
+                  <span className="ap-section-accent ap-section-accent--red" />
+                  Custom Notification
+                </div>
+                <p className="ap-notif-desc">
+                  Send any notification type to a specific email address.
+                </p>
+                <select
+                  className="ap-notif-input"
+                  value={customType}
+                  onChange={(e) => setCustomType(e.target.value)}
+                >
+                  <option value="due">Bill Due Reminder</option>
+                  <option value="overdue">Overdue Alert</option>
+                  <option value="subscription">Subscription Expiry Warning</option>
+                  <option value="bill-confirmation">Bill Upload Confirmation</option>
+                  <option value="welcome">Welcome Email</option>
+                </select>
+                <input
+                  className="ap-notif-input"
+                  placeholder="Recipient email address"
+                  type="email"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                />
+                <button
+                  className="ap-notif-btn ap-notif-btn--yellow"
+                  disabled={notifLoading["send-custom"] || !customEmail.trim()}
+                  onClick={() => notifAction("send-custom", { type: customType, email: customEmail.trim() })}
+                >
+                  {notifLoading["send-custom"] ? "Sending…" : "Send Custom"}
+                </button>
+              </div>
+
             </div>
           </div>
         )}

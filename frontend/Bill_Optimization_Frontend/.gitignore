@@ -20,6 +20,12 @@ x
 tmp/
 temp/
 
+=======
+
+# Temporary files
+tmp/
+temp/
+
 # OS files
 .DS_Store
 Thumbs.db

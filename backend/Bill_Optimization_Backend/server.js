@@ -17,12 +17,16 @@ app.use(express.urlencoded({ extended: true }));
 // 🔹 Import createDefaultAdmin
 const { createDefaultAdmin } = require("./controllers/registerController/registerController");
 
+// 🔹 Import Notification Service
+const { startAllNotificationJobs } = require("./services/notificationService");
+
 // 🔹 MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB Connected Successfully");
     await createDefaultAdmin();
+    startAllNotificationJobs(); // 🔔 Start cron-based notification schedulers
   })
   .catch((err) => console.log("❌ MongoDB Connection Failed:", err));
 
@@ -37,7 +41,8 @@ const applianceRoutes      = require("./routes/applianceRoute/applianceRoute");
 const predictionRoute      = require("./routes/predictRoute/predictRoute");
 const adminRoute           = require("./routes/adminRoute/adminRoute");
 const paymentRoute         = require("./routes/paymentRoute/paymentRoute");
-const subscriptionRoute    = require("./routes/subscriptionRoute/subscriptionRoute"); // ← ADD THIS
+const subscriptionRoute    = require("./routes/subscriptionRoute/subscriptionRoute");
+const notificationRoute    = require("./routes/notificationRoute/notificationRoute");
 
 // 🔹 Use Routes
 app.use("/api/bills",           billRoutes);
@@ -50,7 +55,8 @@ app.use("/api/appliances",      applianceRoutes);
 app.use("/api/predict",         predictionRoute);
 app.use("/api/admin",           adminRoute);
 app.use("/api/payment",         paymentRoute);
-app.use("/api/subscription",    subscriptionRoute);  // ← ADD THIS
+app.use("/api/subscription",    subscriptionRoute);
+app.use("/api/notifications",   notificationRoute);
 
 // 🔹 Health Check
 app.get("/", (req, res) => {
