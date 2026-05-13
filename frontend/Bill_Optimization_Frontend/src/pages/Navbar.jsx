@@ -90,9 +90,9 @@ const Navbar = ({ onHistoryOpen }) => {
   }, []);
 
   const drawerItems = [
-    { label: "Home",        path: "/",          icon: <HomeIcon/> },
-    { label: "Dashboard",   path: "/dashboard", icon: <DashboardIcon/> },
-    { label: "Upload Bill", path: "/upload",    icon: <UploadIcon/> },
+    { label: t("home"),        path: "/",          icon: <HomeIcon/> },
+    { label: t("dashboard"),   path: "/dashboard", icon: <DashboardIcon/> },
+    { label: t("uploadBill"), path: "/upload",    icon: <UploadIcon/> },
     ...(onHistoryOpen ? [{
       label: "History",
       path: null,

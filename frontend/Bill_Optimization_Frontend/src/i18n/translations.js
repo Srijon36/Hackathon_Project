@@ -51,6 +51,12 @@ const translations = {
     dropSub:       "Supports PDF, JPG, PNG up to 10MB",
     analyseBtn:    "⚡ Scan & Analyse My Bill",
     uploading:     "Scanning...",
+    uploadHeroTitle: "Decipher Your Energy.",
+    uploadHeroSub:   "Upload your digital electricity bills to understand costs, patterns, and savings.",
+    dropFileReady:   "File ready for analysis",
+    browseFiles:     "Browse Files",
+    selectBoard:     "SELECT UTILITY BOARD",
+    scanAnalyse:     "Scan & Analyse",
 
     // ── Dashboard ──
     dashTitle:     "Dashboard",
@@ -120,6 +126,12 @@ const translations = {
     dropSub:       "PDF, JPG, PNG 10MB तक सपोर्ट करता है",
     analyseBtn:    "⚡ मेरा बिल स्कैन करें",
     uploading:     "स्कैन हो रहा है...",
+    uploadHeroTitle: "अपनी ऊर्जा को समझें।",
+    uploadHeroSub:   "अपने बिजली बिल अपलोड करें और लागत, पैटर्न व बचत को समझें।",
+    dropFileReady:   "फ़ाइल विश्लेषण के लिए तैयार है",
+    browseFiles:     "फ़ाइल चुनें",
+    selectBoard:     "यूटिलिटी बोर्ड चुनें",
+    scanAnalyse:     "स्कैन करें और विश्लेषण करें",
 
     // ── Dashboard ──
     dashTitle:     "डैशबोर्ड",
@@ -189,6 +201,12 @@ const translations = {
     dropSub:       "PDF, JPG, PNG ১০MB পর্যন্ত সমর্থন করে",
     analyseBtn:    "⚡ আমার বিল স্ক্যান করুন",
     uploading:     "স্ক্যান হচ্ছে...",
+    uploadHeroTitle: "আপনার শক্তি বুঝুন।",
+    uploadHeroSub:   "আপনার বিদ্যুৎ বিল আপলোড করুন এবং খরচ, প্যাটার্ন ও সঞ্চয় বুঝুন।",
+    dropFileReady:   "ফাইল বিশ্লেষণের জন্য প্রস্তুত",
+    browseFiles:     "ফাইল বেছে নিন",
+    selectBoard:     "ইউটিলিটি বোর্ড বেছে নিন",
+    scanAnalyse:     "স্ক্যান ও বিশ্লেষণ করুন",
 
     // ── Dashboard ──
     dashTitle:     "ড্যাশবোর্ড",

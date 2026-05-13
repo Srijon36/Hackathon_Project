@@ -4,6 +4,7 @@ import { getAllBills } from "../Reducer/BillSlice";
 import { useNavigate } from "react-router-dom";
 import { predictNextBill } from "../Reducer/AnalysisSlice";
 import { getApplianceProfile } from "../Reducer/ApplianceSlice";
+import { useTranslation } from "react-i18next";
 import BillSummary      from "./BillSummary";
 import SavingsCard      from "./SavingsCard";
 import UsageInsights    from "./UsageInsights";
@@ -181,6 +182,7 @@ const TrendBadge = ({ trend, pct }) => {
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { bills, loading, error }                                          = useSelector(s => s.bill);
   const { profile }                                                        = useSelector(s => s.appliance);
@@ -247,9 +249,9 @@ const Dashboard = () => {
       {/* Header */}
       <div className="dash-header">
         <div className="dash-header-left">
-          <h2>Dashboard</h2>
+          <h2>{t("dashTitle")}</h2>
           <div className="dash-meta">
-            <span className="meta-item"><UserIcon/> Welcome back, <strong>{data.customerName}</strong></span>
+            <span className="meta-item"><UserIcon/> {t("welcomeBack2")}, <strong>{data.customerName}</strong></span>
             <span className="meta-sep"/>
             <span className="meta-item"><HashIcon/> Customer ID: <strong>{data.consumerNumber}</strong></span>
             <span className="meta-sep"/>
@@ -259,7 +261,7 @@ const Dashboard = () => {
         <div className="dash-header-btns">
           <DownloadReport data={data}/>
           <button className="dash-upload-btn" onClick={() => navigate("/upload")}>
-            <UploadIcon/> Upload New Bill
+            <UploadIcon/> {t("uploadNewBill")}
           </button>
         </div>
       </div>
@@ -280,7 +282,7 @@ const Dashboard = () => {
         {/* Card 1 — Units Consumed (dark navy) */}
         <div className="kpi-card kpi-blue">
           <div className="kpi-icon-box kpi-icon-blue"><Bolt/></div>
-          <div className="kpi-label">Units Consumed</div>
+          <div className="kpi-label">{t("unitsConsumed")}</div>
           <div className="kpi-value kpi-val-blue">{unitsBilled} <span className="kpi-unit">kWh</span></div>
           <span className="kpi-badge neutral">&#8377;{costPerUnit}/unit</span>
         </div>
@@ -288,7 +290,7 @@ const Dashboard = () => {
         {/* Card 2 — Total Bill (white) */}
         <div className="kpi-card kpi-dark">
           <div className="kpi-icon-box kpi-icon-dark"><CardIcon/></div>
-          <div className="kpi-label">Total Bill</div>
+          <div className="kpi-label">{t("totalBill")}</div>
           <div className="kpi-value kpi-val-dark">&#8377;{netAmount.toLocaleString("en-IN")}</div>
           <span className="kpi-badge warn">Gross &#8377;{grossAmount.toLocaleString("en-IN")}</span>
         </div>
@@ -296,7 +298,7 @@ const Dashboard = () => {
         {/* Card 3 — Rebate Savings (NOW DARK / BLACK) */}
         <div className="kpi-card kpi-blue">
           <div className="kpi-icon-box kpi-icon-blue"><Rupee/></div>
-          <div className="kpi-label">Rebate Savings</div>
+          <div className="kpi-label">{t("rebateSavings")}</div>
           <div className="kpi-value kpi-val-blue">&#8377;{saved.toLocaleString("en-IN")}</div>
           <span className="kpi-badge up">+{percent}% saved</span>
         </div>
@@ -304,7 +306,7 @@ const Dashboard = () => {
         {/* Card 4 — Yearly Projection (white) */}
         <div className="kpi-card kpi-teal">
           <div className="kpi-icon-box kpi-icon-teal"><TrendUp/></div>
-          <div className="kpi-label">Yearly Projection</div>
+          <div className="kpi-label">{t("yearlyProjection")}</div>
           <div className="kpi-value kpi-val-teal">&#8377;{yearlySavings.toLocaleString("en-IN")}</div>
           <span className="kpi-badge up">Based on this bill</span>
         </div>
