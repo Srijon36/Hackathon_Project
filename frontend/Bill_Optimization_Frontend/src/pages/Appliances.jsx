@@ -309,16 +309,147 @@ const CONSUMER_TYPES = [
 // ₹/kWh rates per type
 const RATE_MAP = { domestic: 7, commercial: 9, industrial: 6.5 };
 
-// Default hours/day by appliance name
+// Default hours/day by appliance name — realistic usage patterns
 const DEFAULT_HOURS = {
-  "Air Conditioner": 8, "Ceiling Fan": 12, "Table Fan": 10,
-  "Refrigerator": 24,  "Water Heater (Geyser)": 1, "Television": 6,
-  "Laptop": 8,         "WiFi Router": 24, "LED Bulbs": 6,
-  "Central AC Unit": 10, "Chiller Unit": 16,
-  "Server Rack": 24,   "Conveyor Belt": 16,
-  "Industrial Chiller": 20, "Diesel Generator": 8,
-  default: 8,
+  // ── Always-on / continuous ──────────────────────────────────
+  "Refrigerator":              24,
+  "WiFi Router":               24,
+  "Server Rack":               24,
+  "Deep Freezer":              24,
+  "UPS / Inverter":            24,
+  "UPS System":                24,
+  "UPS (Industrial)":          24,
+  "Fire Alarm System":         24,
+  "CCTV System":               24,
+  "Water Purifier":             6,
+
+  // ── Cooling & fans (summer-heavy, avg across year) ──────────
+  "Air Conditioner":            8,
+  "Split AC (Commercial)":      8,
+  "Central AC Unit":           10,
+  "Cassette AC":                8,
+  "Ceiling Fan":               12,
+  "Table Fan":                 10,
+  "Exhaust Fan":                4,
+  "Air Cooler":                 8,
+  "Air Handling Unit (AHU)":   12,
+  "AHU (Industrial)":          12,
+  "Chiller Unit":              16,
+  "Industrial Chiller":        20,
+  "Cooling Tower":             12,
+  "Dehumidifier":               6,
+
+  // ── Heating (winter-heavy, avg across year) ─────────────────
+  "Water Heater (Geyser)":      1,
+  "Room Heater":                3,
+  "Electric Resistance Heater": 4,
+  "Infrared Heater":            3,
+  "Autoclave":                  4,
+
+  // ── Entertainment ───────────────────────────────────────────
+  "Television":                 6,
+  "Set-top Box":                8,
+  "Gaming Console":             2,
+  "Home Theatre":               1,
+  "Soundbar":                   2,
+  "Projector":                 0.5,   // ← occasional
+  "Projector (Conference)":     1,
+
+  // ── Computers & office ──────────────────────────────────────
+  "Laptop":                     8,
+  "Desktop PC":                 8,
+  "Monitor":                    8,
+  "Workstation PC":             8,
+  "Printer":                    1,
+  "Laser Printer":              1,
+  "Scanner":                   0.5,
+  "Photocopier / MFP":          2,
+  "Shredder":                  0.25,
+  "Electric Stapler":          0.1,
+  "POS Terminal":               8,
+  "Video Conferencing Unit":    2,
+  "Access Control System":     24,
+  "Digital Signage Display":   10,
+
+  // ── Kitchen — regular use ───────────────────────────────────
+  "Microwave":                 0.25,
+  "Induction Cooktop":          1,
+  "Rice Cooker":               0.5,
+  "Oven / OTG":                0.25,
+  "Coffee Maker":              0.25,
+  "Electric Kettle":           0.25,
+  "Dishwasher":                0.5,
+  "Water Dispenser":            2,
+  "Electric Water Dispenser":   2,
+
+  // ── Kitchen — occasional / quick use ────────────────────────
+  "Mixer / Grinder":           0.25,  // ← occasional
+  "Toaster":                   0.1,   // ← occasional
+  "Commercial Oven":            6,
+  "Commercial Dishwasher":      4,
+  "Industrial Mixer":           4,
+  "Coffee Machine (Pro)":       6,
+  "Microwave (Commercial)":     4,
+  "Food Warmer / Bain Marie":   8,
+  "Ice Machine":               12,
+  "Deep Fryer":                 5,
+  "Exhaust Hood":               6,
+
+  // ── Laundry — occasional ────────────────────────────────────
+  "Washing Machine":           0.5,   // ← occasional
+  "Clothes Dryer":             0.5,   // ← occasional
+  "Iron":                      0.25,  // ← occasional (~15 min/day avg)
+  "Vacuum Cleaner":            0.25,  // ← occasional
+  "Wet Grinder":               0.25,
+  "Hair Dryer":                0.1,   // ← occasional
+  "Hair Straightener":         0.1,
+  "Electric Shaver":           0.05,
+  "Electric Toothbrush":       0.05,
+
+  // ── Lighting ────────────────────────────────────────────────
+  "LED Bulbs":                  6,
+  "Tube Lights":                8,
+  "Outdoor Lights":             8,
+  "Night Lamp":                10,
+  "LED Panel Lights":          10,
+  "High Bay LED":              12,
+  "High Bay LED (Industrial)": 12,
+  "Emergency Exit Lighting":   24,
+  "Floodlight":                 6,
+  "Outdoor Signage Light":     10,
+  "Reception Desk Lighting":   10,
+  "Explosion-proof Light":     12,
+  "Emergency Lighting":        24,
+
+  // ── Water & utilities ───────────────────────────────────────
+  "Water Pump":                 2,
+  "Air Purifier":               6,
+  "Humidifier":                 4,
+  "Air Compressor":             6,
+  "Submersible Pump":           2,
+  "RO Water Plant":             8,
+
+  // ── Industrial ──────────────────────────────────────────────
+  "Conveyor Belt":             16,
+  "Diesel Generator":           8,
+  "Overhead Crane":             8,
+  "Forklift (Electric)":        6,
+  "CNC Milling Machine":       10,
+  "CNC Lathe":                 10,
+  "Welding Machine":            6,
+  "Laser Cutter":               8,
+  "Plasma Cutter":              6,
+  "Drill Press":                4,
+  "Hydraulic Press":            8,
+  "Elevator / Lift":            8,
+  "Escalator":                 12,
+  "EV Charger":                 4,
+
+  // ── Fallback ────────────────────────────────────────────────
+  default: 2,   // sensible low default for unknown appliances
 };
+
+
 
 // ── Color palette ──────────────────────────────────────────────────────────
 const C = {
