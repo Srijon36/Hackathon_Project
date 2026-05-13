@@ -36,12 +36,24 @@ Rules:
 - Ceiling Fan / Table Fan: Heavy Apr–Sep, minimal Nov–Feb
 - Room Heater / Immersion Rod / Water Heater (Geyser): Heavy Nov–Feb, 0 or minimal Apr–Sep
 - Refrigerator: 24 hrs all year (runs continuously)
-- Washing Machine / Iron / Laptop / TV / Router / LED Bulbs: Consistent all year
-- Induction Cooktop / Microwave / Mixer: Consistent all year
+- Washing Machine / Dishwasher: 0.5 hrs/day max — these are used a few times a week, NOT daily for hours
+- Iron / Clothes Dryer / Clothes Iron: 0.1–0.3 hrs/day max — occasional, only a few times per week
+- Projector / Home Theatre: 0.5–1 hr/day — occasional leisure use
+- Vacuum Cleaner: 0.2–0.3 hrs/day — used a few times a week
+- Hair Dryer / Hair Straightener / Electric Shaver: 0.05–0.1 hrs/day
+- Mixer / Grinder / Blender: 0.1–0.25 hrs/day — used briefly for cooking
+- Toaster / Electric Kettle / Coffee Maker: 0.1–0.25 hrs/day
+- Microwave / Oven / OTG: 0.2–0.5 hrs/day
+- Laptop / Desktop PC / Monitor: 8 hrs/day for working adults, consistent year-round
+- WiFi Router / CCTV / UPS / Refrigerator: 24 hrs, consistent year-round
+- Television / Set-top Box: 5–8 hrs/day, consistent year-round
+- LED Bulbs / Tube Lights: 6–8 hrs/day (evening use), slightly lower in summer (longer days)
 - Air Purifier / Humidifier: Slightly higher Oct–Feb (pollution/dry season)
-- Gaming Console / Projector / Home Theatre: Slightly higher Nov–Feb (more indoor time)
+- Gaming Console: Slightly higher Nov–Feb (more indoor time)
 - All hours must be between 0 and 24
-- Keep the user's configured hoursPerDay as the PEAK season value; reduce proportionally for off-season
+- Occasional appliances should NEVER exceed 1 hr/day on peak months
+- Keep the user's configured hoursPerDay as the PEAK season value for seasonal appliances; reduce proportionally for off-season
+- For occasional-use appliances (iron, dryer, projector, vacuum, etc.), the configured hoursPerDay is already their peak and should stay that way year-round
 
 Respond ONLY in this exact JSON format, no markdown, no backticks:
 {
