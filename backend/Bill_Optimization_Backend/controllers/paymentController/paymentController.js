@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
 // ─── Create Order ────────────────────────────────────────────────
 const createOrder = async (req, res) => {
   try {
-    const { planName = "Pro", amount = 500 } = req.body; // ← accept from frontend
+    const { planName = "Pro", amount = 5 } = req.body; // ← accept from frontend
 
     const options = {
       amount: amount * 100, // paise
