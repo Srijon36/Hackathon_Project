@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "../Reducer/AuthSlice";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation();
 
   const { register, handleSubmit, formState: { errors } } = useForm();
 
@@ -38,12 +40,12 @@ const Login = () => {
 
         {/* Form body */}
         <div className="auth-card-body">
-          <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Login to optimize your energy bills</p>
+          <h2 className="auth-title">{t("welcomeBack")}</h2>
+          <p className="auth-subtitle">{t("loginSub")}</p>
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="auth-field">
-              <label>Email Address</label>
+              <label>{t("email")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">✉️</span>
                 <input
@@ -56,7 +58,7 @@ const Login = () => {
             </div>
 
             <div className="auth-field">
-              <label>Password</label>
+              <label>{t("password")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">🔒</span>
                 <input
@@ -75,25 +77,25 @@ const Login = () => {
 
             <div className="auth-options-row">
               <label className="auth-check-label">
-                <input type="checkbox" /> Remember me
+                <input type="checkbox" /> {t("rememberMe")}
               </label>
 
               {/* ✅ Fixed — now navigates to /forgot-password */}
               <Link to="/forgot-password" className="auth-forgot">
-                Forgot Password?
+                {t("forgotPassword")}
               </Link>
             </div>
 
             <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? "Signing in..." : "Login →"}
+              {loading ? "Signing in..." : t("signIn")}
             </button>
           </form>
 
           <div className="auth-divider"><span>OR</span></div>
 
           <p className="auth-switch">
-            Don't have an account?{" "}
-            <Link to="/register" className="auth-switch-link">Register now</Link>
+            {t("noAccount")}{" "}
+            <Link to="/register" className="auth-switch-link">{t("registerHere")}</Link>
           </p>
 
           <p className="auth-tagline">SECURE • SUSTAINABLE • SIMPLE</p>

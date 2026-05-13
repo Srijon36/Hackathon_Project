@@ -257,11 +257,10 @@ const UploadBill = () => {
         {/* Hero Text */}
         <div className="eb-hero-text">
           <h2 className="eb-hero-title">
-            Decipher Your <span className="eb-hero-title-green">Energy.</span>
+            {t("uploadHeroTitle")}
           </h2>
           <p className="eb-hero-sub">
-            Upload your digital electricity bills to understand costs, patterns,
-            and savings through our editorial-grade analysis engine.
+            {t("uploadHeroSub")}
           </p>
         </div>
 
@@ -329,11 +328,11 @@ const UploadBill = () => {
                 </svg>
               )}
             </div>
-            <h3 className="eb-drop-title">{file ? file.name : "Attach Bill"}</h3>
+            <h3 className="eb-drop-title">{file ? file.name : t("dropTitle")}</h3>
             <p className="eb-drop-sub">
               {file
-                ? "File ready for analysis"
-                : "PDF, JPG, or PNG files supported (Max 10MB)"}
+                ? t("dropFileReady")
+                : t("dropSub")}
             </p>
             {!file && (
               <button
@@ -347,7 +346,7 @@ const UploadBill = () => {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                Browse Files
+                {t("browseFiles")}
               </button>
             )}
             <input
@@ -367,7 +366,7 @@ const UploadBill = () => {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", marginRight: 6, verticalAlign: "middle" }}>
                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                 </svg>
-                SELECT UTILITY BOARD
+                {t("selectBoard")}
               </p>
               <div className="eb-board-chips">
                 {UTILITY_BOARDS.map((board) => (
@@ -392,7 +391,7 @@ const UploadBill = () => {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
-              Scan &amp; Analyse
+              {t("scanAnalyse")}
             </button>
 
             <p className="eb-scan-security">

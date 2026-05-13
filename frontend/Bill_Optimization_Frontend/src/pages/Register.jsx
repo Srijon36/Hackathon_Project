@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../Reducer/AuthSlice";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     name: "", email: "", password: "", confirmPassword: "",
@@ -47,12 +49,12 @@ const Register = () => {
 
         {/* Form body */}
         <div className="auth-card-body">
-          <h2 className="auth-title">Create Account</h2>
-          <p className="auth-subtitle">Start optimizing your energy bills today</p>
+          <h2 className="auth-title">{t("createAccount")}</h2>
+          <p className="auth-subtitle">{t("registerSub")}</p>
 
           <form onSubmit={handleSubmit}>
             <div className="auth-field">
-              <label>Full Name</label>
+              <label>{t("fullName")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">👤</span>
                 <input
@@ -63,7 +65,7 @@ const Register = () => {
             </div>
 
             <div className="auth-field">
-              <label>Email Address</label>
+              <label>{t("email")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">✉️</span>
                 <input
@@ -74,7 +76,7 @@ const Register = () => {
             </div>
 
             <div className="auth-field">
-              <label>Password</label>
+              <label>{t("password")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">🔒</span>
                 <input
@@ -88,7 +90,7 @@ const Register = () => {
             </div>
 
             <div className="auth-field">
-              <label>Confirm Password</label>
+              <label>{t("confirmPassword")}</label>
               <div className="auth-input-wrap">
                 <span className="auth-input-icon">🔄</span>
                 <input
@@ -114,13 +116,13 @@ const Register = () => {
             {errorMessage  && <div className="text-red error-msg">{errorMessage}</div>}
 
             <button type="submit" className="auth-submit-btn" disabled={loading}>
-              {loading ? "Creating Account..." : "Register →"}
+              {loading ? "Creating Account..." : t("register")}
             </button>
           </form>
 
           <p className="auth-switch">
-            Already have an account?{" "}
-            <Link to="/login" className="auth-switch-link">Log in</Link>
+            {t("haveAccount")}{" "}
+            <Link to="/login" className="auth-switch-link">{t("loginHere")}</Link>
           </p>
         </div>
       </div>
