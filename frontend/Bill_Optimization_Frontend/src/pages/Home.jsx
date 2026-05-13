@@ -9,9 +9,18 @@ const Home = () => {
         <div className="hero-badge-new">● PROVEN BILL ANALYSIS SYSTEM</div>
 
         <h1 className="hero-title-new">
+
           Optimize Your{" "}
           <span className="hero-title-green">Energy Bill</span>{" "}
           <span className="hero-title-ghost">for Savings</span>
+
+          Optimize Your{" "}
+          <span className="hero-title-green">Energy Bill</span>{" "}
+          <span className="hero-title-ghost">for Savings</span>
+
+          {t("heroTitle1")}<br />
+          <span className="hero-title-green">{t("heroTitle2")}</span>
+
         </h1>
 
         <p className="hero-desc">
