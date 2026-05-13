@@ -263,7 +263,7 @@ const PredictionCard = () => {
       {predicting && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "36px 0", gap: "12px" }}>
           <div className="spinner" />
-          <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>🤖 Claude is analysing your bill history…</p>
+          <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>🤖 ENERGY BILL is analysing your bill history…</p>
         </div>
       )}
 
