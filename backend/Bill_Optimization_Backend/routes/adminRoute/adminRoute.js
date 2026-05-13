@@ -21,3 +21,4 @@ router.patch("/users/:userId/toggle-subscription", toggleSubscription);
 router.patch("/users/:userId/toggle-active",       toggleActiveStatus);
 router.delete("/users/:userId",                    deleteUser);
 
+module.exports = router;module.exports = router;
