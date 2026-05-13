@@ -1,4 +1,5 @@
 const Appliance = require("../../models/applianceModel/applianceModel");
+const { predictMonthlyApplianceUsage } = require("../../services/monthlyAppliancePredictionService");
 
 // ── Save or Update Appliance Profile ──────────
 const saveApplianceProfile = async (req, res) => {
@@ -55,4 +56,16 @@ const getApplianceProfile = async (req, res) => {
   }
 };
 
-module.exports = { saveApplianceProfile, getApplianceProfile };
+// ── Predict Monthly Appliance Usage (AI) ──────
+const predictMonthlyUsage = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await predictMonthlyApplianceUsage(userId);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("❌ predictMonthlyUsage error:", error.message);
+    return res.status(500).json({ success: false, message: error.message || "Prediction failed." });
+  }
+};
+
+module.exports = { saveApplianceProfile, getApplianceProfile, predictMonthlyUsage };
